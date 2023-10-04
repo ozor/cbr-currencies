@@ -1,0 +1,52 @@
+version: "3.8"
+
+networks:
+  docker:
+    driver: bridge
+
+services:
+
+  app:
+    build: docker/php-fpm
+    volumes:
+      - ./symfony:/var/www/html/app
+      - ./docker/php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    networks:
+      - docker
+    environment:
+      PHP_IDE_CONFIG: "serverName=app"
+    container_name: app
+
+  nginx:
+    image: nginx:1.23
+    volumes:
+      - ./symfony:/var/www/html/app
+      - ./docker/nginx/app.conf:/etc/nginx/conf.d/app.conf
+    networks:
+      - docker
+    ports:
+      - "80:80"
+    container_name: nginx
+
+  memcached:
+    image: memcached:1.6.18
+    networks:
+      - docker
+    ports:
+      - '11211:11211'
+    container_name: memcached
+
+  rabbitmq:
+    restart: always
+    image: rabbitmq:3-management
+    volumes:
+      - "rabbitmq-data:/var/lib/rabbitmq"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    networks:
+      - docker
+
