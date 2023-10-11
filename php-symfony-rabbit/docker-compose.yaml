@@ -1,5 +1,7 @@
 version: "3.8"
 
+x-volume-root-project: &volume_root_project "./:/var/www/html"
+
 networks:
   docker:
     driver: bridge
@@ -7,26 +9,33 @@ networks:
 services:
 
   app:
-    build: docker/php-fpm
+    restart: always
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
     volumes:
-      - ./symfony:/var/www/html/app
+      - *volume_root_project
       - ./docker/php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     networks:
       - docker
     environment:
       PHP_IDE_CONFIG: "serverName=app"
-    container_name: app
+    depends_on:
+      - memcached
+      - rabbitmq
 
   nginx:
-    image: nginx:1.23
+    restart: always
+    image: nginx:latest
     volumes:
-      - ./symfony:/var/www/html/app
-      - ./docker/nginx/app.conf:/etc/nginx/conf.d/app.conf
+      - "./docker/nginx/conf.d:/etc/nginx/conf.d:ro"
+      - *volume_root_project
     networks:
       - docker
     ports:
-      - "80:80"
-    container_name: nginx
+      - "8090:80"
+    depends_on:
+      - app
 
   memcached:
     image: memcached:1.6.18
@@ -34,7 +43,6 @@ services:
       - docker
     ports:
       - '11211:11211'
-    container_name: memcached
 
   rabbitmq:
     restart: always
@@ -42,11 +50,13 @@ services:
     volumes:
       - "rabbitmq-data:/var/lib/rabbitmq"
     ports:
-      - "15672:15672"
-      - "5672:5672"
+      - "15673:15672"
+      - "5673:5672"
     environment:
       RABBITMQ_DEFAULT_USER: rabbitmq
       RABBITMQ_DEFAULT_PASS: rabbitmq
     networks:
       - docker
 
+volumes:
+  rabbitmq-data:
