@@ -18,6 +18,22 @@ framework:
     php_errors:
         log: true
 
+    http_client:
+        scoped_clients:
+            cbr_rates.client:
+                base_uri: 'http://www.cbr.ru'
+                verify_peer: false
+                retry_failed:
+                    http_codes:
+                        0: ['GET', 'HEAD']    # retry network errors if request method is GET or HEAD
+                        429: true             # retry all responses with 429 status code
+                        500: ['GET', 'HEAD']
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 3
+                    max_delay: 5000
+                    jitter: 0.3
+
 when@test:
     framework:
         test: true
