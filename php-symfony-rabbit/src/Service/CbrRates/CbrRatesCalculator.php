@@ -14,7 +14,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 readonly class CbrRatesCalculator implements RateCalculatorInterface
 {
     public function __construct(
-        private CbrRatesRepository $cbrRatesRepository,
+        private CbrRatesDailyRepository $cbrRatesRepository,
         private CacheInterface $cache,
     ) {
     }
