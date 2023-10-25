@@ -4,18 +4,8 @@ namespace App\Service\CbrRates;
 
 use App\Dto\CbrRateDto;
 use App\Dto\CbrRatesDto;
-use App\Config\CbrRates;
 use DateTimeImmutable;
-use Psr\Cache\InvalidArgumentException;
 use RuntimeException;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class CbrRatesDailyRepository
 {
