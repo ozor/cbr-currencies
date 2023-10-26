@@ -24,15 +24,15 @@ readonly class CbrRatesCalculator implements RateCalculatorInterface
      */
     public function calculate(RateRequestDto $requestDto): RateResponseDto
     {
+        $date = DateTimeImmutable::createFromFormat(CbrRates::RATE_DATE_FORMAT, $requestDto->date);
         return $this->cache->get(
             sprintf(
                 'CbrRatesCalculator.%s.%s.%s',
-                $requestDto->date,
+                $date->format('Y-m-d'),
                 $requestDto->code,
                 $requestDto->baseCode
             ),
-            function () use ($requestDto): RateResponseDto {
-                $date = DateTimeImmutable::createFromFormat(CbrRates::RATE_DATE_FORMAT, $requestDto->date);
+            function () use ($requestDto, $date): RateResponseDto {
                 $rate = $this->calculateRate($date, $requestDto->code);
                 $baseRate = $this->calculateRate($date, $requestDto->baseCode);
 
