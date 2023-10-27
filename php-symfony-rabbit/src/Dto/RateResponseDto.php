@@ -10,20 +10,40 @@ use DateTimeImmutable;
 final readonly class RateResponseDto
 {
     public function __construct(
-        public DateTimeImmutable $date,
-        public RateResponsePropertyDto $rate,
-        public RateResponsePropertyDto $baseRate,
-        public RateResponsePropertyDto $crossRate,
+        private DateTimeImmutable $date,
+        private RateResponsePropertyDto $rate,
+        private RateResponsePropertyDto $baseRate,
+        private RateResponsePropertyDto $crossRate,
     ) {
+    }
+
+    public function getDate(): DateTimeImmutable
+    {
+        return $this->date;
+    }
+
+    public function getRate(): RateResponsePropertyDto
+    {
+        return $this->rate;
+    }
+
+    public function getBaseRate(): RateResponsePropertyDto
+    {
+        return $this->baseRate;
+    }
+
+    public function getCrossRate(): RateResponsePropertyDto
+    {
+        return $this->crossRate;
     }
 
     public function toArray(): array
     {
         return [
-            'date' => $this->date->format(CbrRates::RATE_DATE_FORMAT),
-            'rate' => $this->rate->toArray(),
-            'baseRate' => $this->baseRate->toArray(),
-            'crossRate' => $this->crossRate->toArray(),
+            'date' => $this->getDate()->format(CbrRates::RATE_DATE_FORMAT),
+            'rate' => $this->getRate()->toArray(),
+            'baseRate' => $this->getBaseRate()->toArray(),
+            'crossRate' => $this->getCrossRate()->toArray(),
         ];
     }
 }

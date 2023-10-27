@@ -9,20 +9,40 @@ use App\Config\CbrRates;
 final readonly class RateResponsePropertyDto
 {
     public function __construct(
-        public string $code,
-        public float $value,
-        public float $valuePrev,
-        public float $diff,
+        private string $code,
+        private float $value,
+        private float $valuePrev,
+        private float $diff,
     ) {
+    }
+
+    public function getCode(): string
+    {
+        return $this->code;
+    }
+
+    public function getValue(): float
+    {
+        return round($this->value, CbrRates::CURRENCY_VALUE_PRECISION);
+    }
+
+    public function getValuePrev(): float
+    {
+        return round($this->valuePrev, CbrRates::CURRENCY_VALUE_PRECISION);
+    }
+
+    public function getDiff(): float
+    {
+        return round($this->diff, CbrRates::CURRENCY_VALUE_PRECISION);
     }
 
     public function toArray(): array
     {
         return [
-            'code' => $this->code,
-            'value' => round($this->value, CbrRates::CURRENCY_VALUE_PRECISION),
-            'valuePrev' => round($this->valuePrev, CbrRates::CURRENCY_VALUE_PRECISION),
-            'diff' => round($this->diff, CbrRates::CURRENCY_VALUE_PRECISION),
+            'code' => $this->getCode(),
+            'value' => $this->getValue(),
+            'valuePrev' => $this->getValuePrev(),
+            'diff' => $this->getDiff(),
         ];
     }
 }
