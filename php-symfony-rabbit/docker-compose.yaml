@@ -53,8 +53,9 @@ services:
       - "15673:15672"
       - "5673:5672"
     environment:
-      RABBITMQ_DEFAULT_USER: rabbitmq
-      RABBITMQ_DEFAULT_PASS: rabbitmq
+      RABBITMQ_ERLANG_COOKIE: $RABBITMQ_ERLANG_COOKIE
+      RABBITMQ_DEFAULT_USER: $RABBITMQ_DEFAULT_USER
+      RABBITMQ_DEFAULT_PASS: $RABBITMQ_DEFAULT_PASS
     networks:
       - docker
 
