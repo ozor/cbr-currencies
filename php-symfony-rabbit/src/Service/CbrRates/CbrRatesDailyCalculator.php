@@ -11,7 +11,7 @@ use DateTimeImmutable;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 
-readonly class CbrRatesCalculator implements RateCalculatorInterface
+readonly class CbrRatesDailyCalculator implements RateCalculatorInterface
 {
     public function __construct(
         private CbrRatesDailyRepository $cbrRatesRepository,
@@ -27,7 +27,7 @@ readonly class CbrRatesCalculator implements RateCalculatorInterface
         $date = DateTimeImmutable::createFromFormat(CbrRates::RATE_DATE_FORMAT, $requestDto->date);
         return $this->cache->get(
             sprintf(
-                'CbrRatesCalculator.%s.%s.%s',
+                'CbrRatesDailyCalculator.%s.%s.%s',
                 $date->format('Y-m-d'),
                 $requestDto->code,
                 $requestDto->baseCode
@@ -57,10 +57,10 @@ readonly class CbrRatesCalculator implements RateCalculatorInterface
     /**
      * @throws InvalidArgumentException
      */
-    protected function calculateRate(DateTimeImmutable $date, string $code): RateResponsePropertyDto
+    private function calculateRate(DateTimeImmutable $date, string $code): RateResponsePropertyDto
     {
-        $rate = $this->cbrRatesRepository->findByDateAndCode($date, $code);
-        $ratePrev = $this->cbrRatesRepository->findByDateAndCode($date->modify('-1 day'), $code);
+        $rate = $this->cbrRatesRepository->findOneByDateAndCode($date, $code);
+        $ratePrev = $this->cbrRatesRepository->findOneByDateAndCode($date->modify('-1 day'), $code);
 
         return new RateResponsePropertyDto(
             code: $rate->code,

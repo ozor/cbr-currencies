@@ -4,15 +4,14 @@ namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
 use App\Dto\CbrRatesDto;
+use App\Messenger\Message\CbrRatesRequestMessage;
 use DateTimeImmutable;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class CbrRatesSupplier
 {
@@ -21,39 +20,45 @@ class CbrRatesSupplier
 
     public function __construct(
         private readonly SerializerInterface $serializer,
-        private readonly HttpClientInterface $cbrRatesClient,
         private readonly CacheInterface $cache,
+        private readonly MessageBusInterface $messageBus,
     ) {
     }
 
-    public function __invoke(DateTimeImmutable $date): CbrRatesDto
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function getDailyByDate(DateTimeImmutable $date): ?CbrRatesDto
     {
         return $this->cache->get(
-            sprintf('CbrRates.%s', $date->format('Y-m-d')),
-            fn() => $this->serializer->deserialize(
-                $this->getRatesXml($date),
-                CbrRatesDto::class,
-                self::FORMAT_XML
-            )
+            sprintf('CbrRatesDaily.%s', $date->format('Y-m-d')),
+            function () use ($date): ?CbrRatesDto {
+                return $this->getRates($date);
+            }
         );
     }
 
-    /**
-     * @throws TransportExceptionInterface
-     * @throws ServerExceptionInterface
-     * @throws RedirectionExceptionInterface
-     * @throws ClientExceptionInterface
-     */
-    private function getRatesXml(DateTimeImmutable $date): string
+    private function getRates(DateTimeImmutable $date): ?CbrRatesDto
     {
-        return $this->cbrRatesClient->request(
-            Request::METHOD_GET,
-            self::URL_DAILY,
-            [
-                'query' => [
+        $envelop = $this->messageBus->dispatch(
+            new CbrRatesRequestMessage(
+                method: Request::METHOD_GET,
+                url: self::URL_DAILY,
+                query: [
                     'date_req' => $date->format(CbrRates::RATE_DATE_FORMAT),
                 ],
-            ]
-        )->getContent();
+            )
+        );
+
+        $handledStamp = $envelop->last(HandledStamp::class);
+        if ($handledStamp instanceof HandledStamp) {
+            return $this->serializer->deserialize(
+                $handledStamp->getResult(),
+                CbrRatesDto::class,
+                self::FORMAT_XML
+            );
+        }
+
+        return null;
     }
 }
