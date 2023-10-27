@@ -41,11 +41,11 @@ readonly class CbrRatesDailyCalculator implements RateCalculatorInterface
                     rate: $rate,
                     baseRate: $baseRate,
                     crossRate: new RateResponsePropertyDto(
-                        code: sprintf('%s/%s', $rate->code, $baseRate->code),
-                        value: round($rate->value / $baseRate->value, CbrRates::CURRENCY_VALUE_PRECISION),
-                        valuePrev: round($rate->valuePrev / $baseRate->valuePrev, CbrRates::CURRENCY_VALUE_PRECISION),
+                        code: sprintf('%s/%s', $rate->getCode(), $baseRate->getCode()),
+                        value: round($rate->getValue() / $baseRate->getValue(), CbrRates::CURRENCY_VALUE_PRECISION),
+                        valuePrev: round($rate->getValuePrev() / $baseRate->getValuePrev(), CbrRates::CURRENCY_VALUE_PRECISION),
                         diff: round(
-                            ($rate->value / $baseRate->value) - ($rate->valuePrev / $baseRate->valuePrev),
+                            ($rate->getValue() / $baseRate->getValue()) - ($rate->getValuePrev() / $baseRate->getValuePrev()),
                             CbrRates::CURRENCY_VALUE_PRECISION
                         ),
                     ),
