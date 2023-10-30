@@ -12,6 +12,7 @@
 - Symfony 6.3
 - RabbitMQ, Redis
 - Docker, Docker-compose
+- PHPUnit
 
 ## Установка:
 1. Docker и Docker-compose должны быть установлены.
