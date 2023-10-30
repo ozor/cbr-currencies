@@ -11,7 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/api/v1/cbr')]
+#[Route('/cbr')]
 class CbrController extends AbstractController
 {
     #[Route('/rates/{date}/{code}/{baseCode}', name: 'app_currency', methods: ['GET'])]
