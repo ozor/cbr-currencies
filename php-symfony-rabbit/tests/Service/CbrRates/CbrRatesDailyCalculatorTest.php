@@ -37,7 +37,6 @@ class CbrRatesDailyCalculatorTest extends TestCase
         $this->cbrRatesRepository
             ->expects($this->exactly(4))
             ->method('findOneByDateAndCode')
-//            ->with($date, 'USD')
             ->willReturn(
                 new CbrRateDto('USD', 1, 75.0, 75.0),
                 new CbrRateDto('USD', 1, 74.5, 74.5),
