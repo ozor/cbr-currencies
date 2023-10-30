@@ -12,8 +12,8 @@ RUN apt-get update --fix-missing && \
     librabbitmq-dev \
     libmemcached-dev \
     libkrb5-dev && rm -r /var/lib/apt/lists/* \
-    && pecl install xdebug-3.2.0 \
-    && docker-php-ext-enable xdebug \
+#    && pecl install xdebug-3.2.0 \
+#    && docker-php-ext-enable xdebug \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-install imap \
     && pecl install amqp \

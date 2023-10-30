@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - *volume_root_project
-      - ./docker/php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+#      - ./docker/php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     networks:
       - docker
     environment:
