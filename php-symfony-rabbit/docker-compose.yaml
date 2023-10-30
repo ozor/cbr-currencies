@@ -21,7 +21,7 @@ services:
     environment:
       PHP_IDE_CONFIG: "serverName=app"
     depends_on:
-      - memcached
+      - redis
       - rabbitmq
 
   nginx:
@@ -37,12 +37,13 @@ services:
     depends_on:
       - app
 
-  memcached:
-    image: memcached:1.6.18
+  redis:
+    restart: always
+    image: redis:latest
+    ports:
+      - "16379:6379"
     networks:
       - docker
-    ports:
-      - '11211:11211'
 
   rabbitmq:
     restart: always
