@@ -3,14 +3,14 @@
 namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
-use App\Contract\RateCalculatorInterface;
+use App\Contract\CbrRatesCalculatorInterface;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
 use App\Repository\CbrRatesRepository;
 use DateTimeImmutable;
 
-readonly class CbrRatesDailyCalculator implements RateCalculatorInterface
+readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
 {
     public function __construct(
         private CbrRatesRepository $cbrRatesRepository,

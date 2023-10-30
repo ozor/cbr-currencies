@@ -8,7 +8,7 @@ use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
 use App\Repository\CbrRatesRepository;
-use App\Service\CbrRates\CbrRatesDailyCalculator;
+use App\Service\CbrRates\CbrRatesCalculator;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -44,7 +44,7 @@ class CbrRatesDailyCalculatorTest extends TestCase
                 new CbrRateDto('EUR', 1, 84.5, 84.5)
             );
 
-        $calculator = new CbrRatesDailyCalculator($this->cbrRatesRepository);
+        $calculator = new CbrRatesCalculator($this->cbrRatesRepository);
 
         $result = $calculator->calculate($requestDto);
 

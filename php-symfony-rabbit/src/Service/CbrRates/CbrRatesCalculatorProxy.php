@@ -2,16 +2,16 @@
 
 namespace App\Service\CbrRates;
 
-use App\Contract\RateCalculatorInterface;
+use App\Contract\CbrRatesCalculatorInterface;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use Symfony\Contracts\Cache\CacheInterface;
 
-readonly class CbrRatesDailyCalculatorProxy implements RateCalculatorInterface
+readonly class CbrRatesCalculatorProxy implements CbrRatesCalculatorInterface
 {
     public function __construct(
-        private CacheInterface $cache,
-        private CbrRatesDailyCalculator $cbrRatesDailyCalculator,
+        private CacheInterface     $cache,
+        private CbrRatesCalculator $cbrRatesDailyCalculator,
     ) {
     }
 

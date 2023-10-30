@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Config\CbrRates;
-use App\Contract\RateCalculatorInterface;
+use App\Contract\CbrRatesCalculatorInterface;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Validator\CbrRates\CbrRatesValidatorInterface;
 use OpenApi\Attributes as OA;
@@ -86,7 +86,7 @@ class CbrController extends AbstractController
     )]
     public function rates(
         CbrRatesValidatorInterface $validator,
-        RateCalculatorInterface $rateCalculator,
+        CbrRatesCalculatorInterface $rateCalculator,
         string $date,
         string $code,
         string $baseCode = CbrRates::BASE_CURRENCY_CODE_DEFAULT,

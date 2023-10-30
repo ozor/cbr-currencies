@@ -28,12 +28,12 @@ services:
         tags:
             - { name: kernel.event_listener, event: kernel.exception, method: handleApiException }
 
-    App\Contract\RateCalculatorInterface:
-        class: App\Service\CbrRates\CbrRatesDailyCalculatorProxy
+    App\Contract\CbrRatesCalculatorInterface:
+        class: App\Service\CbrRates\CbrRatesCalculatorProxy
         autowire: true
         public: true
 
-    App\Contract\RatesSupplierInterface:
+    App\Contract\CbrRatesSupplierInterface:
         class: App\Service\CbrRates\CbrRatesSupplierProxy
         autowire: true
         public: true
