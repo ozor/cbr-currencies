@@ -5,6 +5,7 @@ COPY --from=composer/composer:latest-bin /composer /usr/local/bin/composer
 RUN apt-get update --fix-missing && \
     apt-get install -y \
     git unzip \
+    libicu-dev \
     libpq-dev \
     libc-client-dev \
     libssh-dev \
@@ -17,7 +18,9 @@ RUN apt-get update --fix-missing && \
     && docker-php-ext-install imap \
     && pecl install amqp \
     && docker-php-ext-enable amqp \
-    && docker-php-ext-install bcmath
+    && docker-php-ext-install bcmath \
+    && docker-php-ext-configure intl \
+    && docker-php-ext-install intl
 
 WORKDIR /var/www/html
 
