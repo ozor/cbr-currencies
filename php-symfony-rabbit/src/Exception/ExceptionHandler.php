@@ -37,12 +37,6 @@ class ExceptionHandler
             return;
         }
 
-        if (empty($message)) {
-            $message = ($code === 404)
-                ? 'Rate not found.'
-                : 'Something went wrong.';
-            ;
-        }
         $event->setResponse(
             new JsonResponse([
                 'errorMessage' => $message,
