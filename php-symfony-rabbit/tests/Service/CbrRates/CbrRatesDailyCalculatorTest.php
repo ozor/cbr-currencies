@@ -3,30 +3,28 @@
 namespace App\Tests\Service\CbrRates;
 
 use App\Config\CbrRates;
-use App\Dto\CbrRateDto;
-use App\Dto\RateRequestDto;
-use App\Dto\RateResponseDto;
-use App\Dto\RateResponsePropertyDto;
+use App\Dto\CbrRates\CbrRateDto;
+use App\Dto\CbrRates\CbrRateRequestDto;
+use App\Dto\CbrRates\CbrRateResponseDto;
+use App\Dto\CbrRates\CbrRateResponsePropertyDto;
+use App\Repository\CbrRatesRepository;
 use App\Service\CbrRates\CbrRatesDailyCalculator;
-use App\Service\CbrRates\CbrRatesDailyRepository;
-use DateInterval;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Contracts\Cache\CacheInterface;
 
 class CbrRatesDailyCalculatorTest extends TestCase
 {
     private DateTimeImmutable $date;
 
-    /** @var MockObject&CbrRatesDailyRepository */
-    private CbrRatesDailyRepository $cbrRatesRepository;
+    /** @var MockObject&CbrRatesRepository */
+    private CbrRatesRepository $cbrRatesRepository;
 
     public function setUp(): void
     {
         $this->date = new DateTimeImmutable('2023-10-25');
 
-        $this->cbrRatesRepository = $this->createMock(CbrRatesDailyRepository::class);
+        $this->cbrRatesRepository = $this->createMock(CbrRatesRepository::class);
     }
 
     public function testCalculateRateReturnsExpectedResult()
@@ -34,7 +32,7 @@ class CbrRatesDailyCalculatorTest extends TestCase
         $date = $this->date;
         $datePrev = $this->date->modify('-1 day');
 
-        $requestDto = new RateRequestDto('USD', $date->format(CbrRates::RATE_DATE_FORMAT), 'EUR');
+        $requestDto = new CbrRateRequestDto($date->format(CbrRates::RATE_REQUEST_DATE_FORMAT), 'USD', 'EUR');
 
         $this->cbrRatesRepository
             ->expects($this->exactly(4))
@@ -51,11 +49,11 @@ class CbrRatesDailyCalculatorTest extends TestCase
 
         $result = $calculator->calculate($requestDto);
 
-        $expectedResult = new RateResponseDto(
+        $expectedResult = new CbrRateResponseDto(
             $date,
-            new RateResponsePropertyDto('USD', 75.0, 74.5, 0.5),
-            new RateResponsePropertyDto('EUR', 85.0, 84.5, 0.5),
-            new RateResponsePropertyDto('USD/EUR', 0.8824, 0.8817, 0.0007)
+            new CbrRateResponsePropertyDto('USD', 75.0, 74.5, 0.5),
+            new CbrRateResponsePropertyDto('EUR', 85.0, 84.5, 0.5),
+            new CbrRateResponsePropertyDto('USD/EUR', 0.8824, 0.8817, 0.0007)
         );
 
         $this->assertEquals($expectedResult, $result);

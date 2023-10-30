@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Exception;
+namespace App\Exception\CbrRates;
 
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class RateNotFoundException extends NotFoundHttpException implements CbrRatesExceptionInterface
+class CbrRateNotFoundException extends NotFoundHttpException implements CbrRatesExceptionInterface
 {
     public function __construct()
     {

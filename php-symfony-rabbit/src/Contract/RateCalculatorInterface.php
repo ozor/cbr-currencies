@@ -2,10 +2,10 @@
 
 namespace App\Contract;
 
-use App\Dto\RateRequestDto;
-use App\Dto\RateResponseDto;
+use App\Dto\CbrRates\CbrRateRequestDto;
+use App\Dto\CbrRates\CbrRateResponseDto;
 
 interface RateCalculatorInterface
 {
-    public function calculate(RateRequestDto $requestDto): RateResponseDto;
+    public function calculate(CbrRateRequestDto $requestDto): CbrRateResponseDto;
 }

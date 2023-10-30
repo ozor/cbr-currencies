@@ -2,7 +2,7 @@
 
 namespace App\Contract;
 
-use App\Dto\CbrRatesDto;
+use App\Dto\CbrRates\CbrRatesDto;
 use DateTimeImmutable;
 
 interface CbrRatesSupplierInterface

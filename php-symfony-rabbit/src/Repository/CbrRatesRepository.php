@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Service\CbrRates;
+namespace App\Repository;
 
-use App\Dto\CbrRateDto;
-use App\Dto\CbrRatesDto;
-use App\Exception\CbrRatesExceptionInterface;
-use App\Exception\RateNotFoundException;
+use App\Dto\CbrRates\CbrRateDto;
+use App\Dto\CbrRates\CbrRatesDto;
+use App\Exception\CbrRates\CbrRateNotFoundException;
+use App\Exception\CbrRates\CbrRatesExceptionInterface;
+use App\Service\CbrRates\CbrRatesSupplier;
 use DateTimeImmutable;
 use Exception;
-use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
-class CbrRatesDailyRepository
+class CbrRatesRepository
 {
     public function __construct(
         private readonly CbrRatesSupplier $cbrRatesSupplier,
@@ -22,9 +22,10 @@ class CbrRatesDailyRepository
     public function findOneByDateAndCode(DateTimeImmutable $date, string $code): CbrRateDto
     {
         try {
+            $ratesByDate = $this->findByDate($date)?->rates ?? [];
             $rates = array_filter(
-                $this->findByDate($date)?->rates ?? [],
-                fn(CbrRateDto $rate) => $rate->code === $code
+                $ratesByDate,
+                fn(CbrRateDto $rate): bool => $rate->code === $code
             );
         } catch (Exception $exception) {
             if ($exception instanceof CbrRatesExceptionInterface) {
@@ -34,12 +35,20 @@ class CbrRatesDailyRepository
             $this->logger->error($exception->getMessage(), [
                 'exception' => $exception,
                 'method' => __METHOD__,
+                'date' => $date,
+                'code' => $code,
             ]);
-            throw new RateNotFoundException();
+            throw new CbrRateNotFoundException();
         }
 
         if (empty($rates)) {
-            throw new RateNotFoundException();
+            $this->logger->error('No any rate found in the list of rates', [
+                'method' => __METHOD__,
+                'date' => $date,
+                'code' => $code,
+                'ratesByDate' => $ratesByDate,
+            ]);
+            throw new CbrRateNotFoundException();
         }
 
         return array_shift($rates);
@@ -52,8 +61,9 @@ class CbrRatesDailyRepository
             $this->logger->error('No rates returned from supplier', [
                 'method' => __METHOD__,
                 'supplier' => $this->cbrRatesSupplier::class,
+                'date' => $date,
             ]);
-            throw new RateNotFoundException();
+            throw new CbrRateNotFoundException();
         }
 
         return $rates;

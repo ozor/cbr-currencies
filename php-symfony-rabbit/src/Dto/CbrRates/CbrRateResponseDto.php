@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Dto;
+namespace App\Dto\CbrRates;
 
 use App\Config\CbrRates;
 use DateTimeImmutable;
 
-final readonly class RateResponseDto
+final readonly class CbrRateResponseDto
 {
     public function __construct(
-        private DateTimeImmutable $date,
-        private RateResponsePropertyDto $rate,
-        private RateResponsePropertyDto $baseRate,
-        private RateResponsePropertyDto $crossRate,
+        private DateTimeImmutable          $date,
+        private CbrRateResponsePropertyDto $rate,
+        private CbrRateResponsePropertyDto $baseRate,
+        private CbrRateResponsePropertyDto $crossRate,
     ) {
     }
 
@@ -22,17 +22,17 @@ final readonly class RateResponseDto
         return $this->date;
     }
 
-    public function getRate(): RateResponsePropertyDto
+    public function getRate(): CbrRateResponsePropertyDto
     {
         return $this->rate;
     }
 
-    public function getBaseRate(): RateResponsePropertyDto
+    public function getBaseRate(): CbrRateResponsePropertyDto
     {
         return $this->baseRate;
     }
 
-    public function getCrossRate(): RateResponsePropertyDto
+    public function getCrossRate(): CbrRateResponsePropertyDto
     {
         return $this->crossRate;
     }
@@ -40,7 +40,7 @@ final readonly class RateResponseDto
     public function toArray(): array
     {
         return [
-            'date' => $this->getDate()->format(CbrRates::RATE_DATE_FORMAT),
+            'date' => $this->getDate()->format(CbrRates::RATE_REQUEST_DATE_FORMAT),
             'rate' => $this->getRate()->toArray(),
             'baseRate' => $this->getBaseRate()->toArray(),
             'crossRate' => $this->getCrossRate()->toArray(),

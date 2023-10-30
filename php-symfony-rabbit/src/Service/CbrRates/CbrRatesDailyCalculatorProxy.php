@@ -3,8 +3,8 @@
 namespace App\Service\CbrRates;
 
 use App\Contract\RateCalculatorInterface;
-use App\Dto\RateRequestDto;
-use App\Dto\RateResponseDto;
+use App\Dto\CbrRates\CbrRateRequestDto;
+use App\Dto\CbrRates\CbrRateResponseDto;
 use Symfony\Contracts\Cache\CacheInterface;
 
 readonly class CbrRatesDailyCalculatorProxy implements RateCalculatorInterface
@@ -15,16 +15,16 @@ readonly class CbrRatesDailyCalculatorProxy implements RateCalculatorInterface
     ) {
     }
 
-    public function calculate(RateRequestDto $requestDto): RateResponseDto
+    public function calculate(CbrRateRequestDto $requestDto): CbrRateResponseDto
     {
         return $this->cache->get(
             sprintf(
                 'CbrRatesDailyCalculator.%s.%s.%s',
-                str_replace('/', '-', $requestDto->date),
+                $requestDto->date,
                 $requestDto->code,
                 $requestDto->baseCode
             ),
-            fn (): RateResponseDto => $this->cbrRatesDailyCalculator->calculate($requestDto)
+            fn (): CbrRateResponseDto => $this->cbrRatesDailyCalculator->calculate($requestDto)
         );
     }
 }

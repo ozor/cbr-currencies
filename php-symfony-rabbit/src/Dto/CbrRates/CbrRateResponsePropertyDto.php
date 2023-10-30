@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Dto;
+namespace App\Dto\CbrRates;
 
 use App\Config\CbrRates;
 
-final readonly class RateResponsePropertyDto
+final readonly class CbrRateResponsePropertyDto
 {
     public function __construct(
         private string $code,

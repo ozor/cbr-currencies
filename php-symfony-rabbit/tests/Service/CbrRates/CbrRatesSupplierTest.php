@@ -2,8 +2,8 @@
 
 namespace App\Tests\Service\CbrRates;
 
-use App\Dto\CbrRateDto;
-use App\Dto\CbrRatesDto;
+use App\Dto\CbrRates\CbrRateDto;
+use App\Dto\CbrRates\CbrRatesDto;
 use App\Messenger\Message\CbrRatesRequestMessage;
 use App\Service\CbrRates\CbrRatesSupplier;
 use DateTimeImmutable;

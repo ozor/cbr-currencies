@@ -2,17 +2,19 @@
 
 namespace App\Controller;
 
+use App\Config\CbrRates;
 use App\Contract\RateCalculatorInterface;
-use App\Dto\RateRequestDto;
+use App\Dto\CbrRates\CbrRateRequestDto;
+use App\Validator\CbrRates\CbrRatesValidatorInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Annotation\Route;
 
-class CurrencyController extends AbstractController
+#[Route('/api/v1/cbr')]
+class CbrController extends AbstractController
 {
-    #[Route('/', name: 'app_currency', methods: ['GET'])]
+    #[Route('/rates/{date}/{code}/{baseCode}', name: 'app_currency', methods: ['GET'])]
     #[OA\Get(
         path: '/',
         description: 'Get currency rate',
@@ -20,21 +22,21 @@ class CurrencyController extends AbstractController
             new OA\Parameter(
                 name: 'date',
                 description: 'Rate date',
-                in: 'query',
+                in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
             ),
             new OA\Parameter(
                 name: 'code',
                 description: 'Currency code',
-                in: 'query',
+                in: 'path',
                 required: true,
                 schema: new OA\Schema(type: 'string'),
             ),
             new OA\Parameter(
                 name: 'baseCode',
                 description: 'Base currency code',
-                in: 'query',
+                in: 'path',
                 required: false,
                 schema: new OA\Schema(type: 'string'),
             ),
@@ -73,15 +75,25 @@ class CurrencyController extends AbstractController
                 description: 'Bad request',
             ),
             new OA\Response(
+                response: 404,
+                description: 'Not found',
+            ),
+            new OA\Response(
                 response: 500,
                 description: 'Internal error',
             ),
         ]
     )]
-    public function index(
-        #[MapQueryString] RateRequestDto $rateRequestDto,
+    public function rates(
+        CbrRatesValidatorInterface $validator,
         RateCalculatorInterface $rateCalculator,
+        string $date,
+        string $code,
+        string $baseCode = CbrRates::BASE_CURRENCY_CODE_DEFAULT,
     ): JsonResponse {
+        $rateRequestDto = new CbrRateRequestDto($date, $code, $baseCode);
+        $validator->validate($rateRequestDto);
+
         return $this->json(
             $rateCalculator->calculate($rateRequestDto)->toArray()
         );

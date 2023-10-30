@@ -2,33 +2,33 @@
 
 namespace App\Service\CbrRates;
 
-use App\Contract\RateCalculatorInterface;
-use App\Dto\RateRequestDto;
-use App\Dto\RateResponseDto;
 use App\Config\CbrRates;
-use App\Dto\RateResponsePropertyDto;
+use App\Contract\RateCalculatorInterface;
+use App\Dto\CbrRates\CbrRateRequestDto;
+use App\Dto\CbrRates\CbrRateResponseDto;
+use App\Dto\CbrRates\CbrRateResponsePropertyDto;
+use App\Repository\CbrRatesRepository;
 use DateTimeImmutable;
-use Psr\Cache\InvalidArgumentException;
 
 readonly class CbrRatesDailyCalculator implements RateCalculatorInterface
 {
     public function __construct(
-        private CbrRatesDailyRepository $cbrRatesRepository,
+        private CbrRatesRepository $cbrRatesRepository,
     ) {
     }
 
-    public function calculate(RateRequestDto $requestDto): RateResponseDto
+    public function calculate(CbrRateRequestDto $requestDto): CbrRateResponseDto
     {
-        $date = DateTimeImmutable::createFromFormat(CbrRates::RATE_DATE_FORMAT, $requestDto->date)->setTime(0, 0, 0);
+        $date = DateTimeImmutable::createFromFormat(CbrRates::RATE_REQUEST_DATE_FORMAT, $requestDto->date)->setTime(0, 0, 0);
 
         $rate = $this->calculateRate($date, $requestDto->code);
         $baseRate = $this->calculateRate($date, $requestDto->baseCode);
 
-        return new RateResponseDto(
+        return new CbrRateResponseDto(
             date: $date,
             rate: $rate,
             baseRate: $baseRate,
-            crossRate: new RateResponsePropertyDto(
+            crossRate: new CbrRateResponsePropertyDto(
                 code: sprintf('%s/%s', $rate->getCode(), $baseRate->getCode()),
                 value: round($rate->getValue() / $baseRate->getValue(), CbrRates::CURRENCY_VALUE_PRECISION),
                 valuePrev: round($rate->getValuePrev() / $baseRate->getValuePrev(), CbrRates::CURRENCY_VALUE_PRECISION),
@@ -40,12 +40,12 @@ readonly class CbrRatesDailyCalculator implements RateCalculatorInterface
         );
     }
 
-    private function calculateRate(DateTimeImmutable $date, string $code): RateResponsePropertyDto
+    private function calculateRate(DateTimeImmutable $date, string $code): CbrRateResponsePropertyDto
     {
         $rate = $this->cbrRatesRepository->findOneByDateAndCode($date, $code);
         $ratePrev = $this->cbrRatesRepository->findOneByDateAndCode($date->modify('-1 day'), $code);
 
-        return new RateResponsePropertyDto(
+        return new CbrRateResponsePropertyDto(
             code: $rate->code,
             value: round($rate->value, CbrRates::CURRENCY_VALUE_PRECISION),
             valuePrev: round($ratePrev->value, CbrRates::CURRENCY_VALUE_PRECISION),
