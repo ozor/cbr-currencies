@@ -86,7 +86,7 @@ class CbrController extends AbstractController
     )]
     public function rates(
         CbrRatesValidatorInterface $validator,
-        CbrRatesCalculatorInterface $rateCalculator,
+        CbrRatesCalculatorInterface $calculator,
         string $date,
         string $code,
         string $baseCode = CbrRates::BASE_CURRENCY_CODE_DEFAULT,
@@ -95,7 +95,7 @@ class CbrController extends AbstractController
         $validator->validate($rateRequestDto);
 
         return $this->json(
-            $rateCalculator->calculate($rateRequestDto)->toArray()
+            $calculator->calculate($rateRequestDto)->toArray()
         );
     }
 }
