@@ -17,9 +17,6 @@ readonly class CbrRatesDailyCalculator implements RateCalculatorInterface
     ) {
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function calculate(RateRequestDto $requestDto): RateResponseDto
     {
         $date = DateTimeImmutable::createFromFormat(CbrRates::RATE_DATE_FORMAT, $requestDto->date)->setTime(0, 0, 0);
@@ -43,9 +40,6 @@ readonly class CbrRatesDailyCalculator implements RateCalculatorInterface
         );
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     private function calculateRate(DateTimeImmutable $date, string $code): RateResponsePropertyDto
     {
         $rate = $this->cbrRatesRepository->findOneByDateAndCode($date, $code);
