@@ -1,3 +1,17 @@
+# Root .gitignore
+# Общие системные файлы
+.DS_Store
+Thumbs.db
 
-/.idea
-/BACKUP
+# IDEs
+/.idea/
+/.vscode/
+*.iml
+
+# Backups
+/BACKUP/
+
+# Misc
+*.log
+*.cache
+*.tmp

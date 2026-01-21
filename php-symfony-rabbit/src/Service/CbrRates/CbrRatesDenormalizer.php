@@ -43,8 +43,15 @@ class CbrRatesDenormalizer implements DenormalizerInterface
         }, $rates);
     }
 
-    public function supportsDenormalization(mixed $data, string $type, string $format = null)
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return CbrRatesDto::class === $type;
+    }
+
+    public function getSupportedTypes(?string $format): array
+    {
+        return [
+            CbrRatesDto::class => true,
+        ];
     }
 }
