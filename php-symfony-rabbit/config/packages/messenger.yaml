@@ -1,29 +1,55 @@
 framework:
     messenger:
         # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
-        # failure_transport: failed
+        failure_transport: failed
 
         transports:
             # https://symfony.com/doc/current/messenger.html#transport-configuration
-            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
-            # failed: 'doctrine://default?queue_name=failed'
-            # sync: 'sync://'
+            # Синхронный транспорт для немедленной обработки
+            sync: 'sync://'
+
+            # Асинхронный транспорт через RabbitMQ
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    auto_setup: true
+                    exchange:
+                        name: cbr_rates_exchange
+                        type: direct
+                        default_publish_routing_key: cbr_rates
+                    queues:
+                        cbr_rates_queue:
+                            binding_keys: [cbr_rates]
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 2
+                    max_delay: 10000
+
+            # Транспорт для failed сообщений
+            failed:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: failed_exchange
+                        type: direct
+                    queues:
+                        failed_queue:
+                            binding_keys: [ failed ]
 
         routing:
-            # Route your messages to the transports
-            # 'App\Message\YourMessage': async
+            # Маршрутизация сообщений
+            # Запросы к CBR обрабатываются СИНХРОННО для получения немедленного результата
+            # Результаты кешируются в Redis через CbrRatesSupplierProxy
+            'App\Messenger\Message\CbrRatesRequestMessage': sync
 
-#parameters:
-#    rabbit_http_default_protocol: 'http'
-#    rabbit_http_protocol: '%env(default:rabbit_http_default_protocol:RABBITMQ_HTTP_PROTOCOL)%'
-#    rabbit_host: '%env(RABBITMQ_DEFAULT_HOST)%'
-#    rabbit_http_port: '%env(RABBITMQ_HTTP_PORT)%'
-#    env(RABBIT_HTTP_URL): '%rabbit_http_protocol%://%rabbit_host%:%rabbit_http_port%'
+            # Фоновое обновление кеша выполняется АСИНХРОННО через RabbitMQ
+            'App\Messenger\Message\CbrRatesCacheUpdateMessage': async
 
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                # replace with your transport name here (e.g., my_transport: 'in-memory://')
-#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
-#                async: 'in-memory://'
+when@test:
+    framework:
+        messenger:
+            transports:
+                # В тестовом окружении используем синхронный in-memory транспорт
+                async: 'in-memory://'
+                sync: 'sync://'

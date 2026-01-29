@@ -2,11 +2,11 @@
 
 namespace App\Repository;
 
+use App\Contract\CbrRatesSupplierInterface;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\CbrRateNotFoundException;
 use App\Exception\CbrRates\CbrRatesExceptionInterface;
-use App\Service\CbrRates\CbrRatesSupplier;
 use DateTimeImmutable;
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -14,7 +14,7 @@ use Psr\Log\LoggerInterface;
 class CbrRatesRepository
 {
     public function __construct(
-        private readonly CbrRatesSupplier $cbrRatesSupplier,
+        private readonly CbrRatesSupplierInterface $cbrRatesSupplier,
         private readonly LoggerInterface $logger,
     ) {
     }

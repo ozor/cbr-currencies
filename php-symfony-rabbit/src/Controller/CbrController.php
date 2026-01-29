@@ -9,7 +9,7 @@ use App\Validator\CbrRates\CbrRatesValidatorInterface;
 use OpenApi\Annotations as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/cbr')]
 class CbrController extends AbstractController
@@ -78,7 +78,8 @@ class CbrController extends AbstractController
      *    description="Internal error",
      * )
      */
-    #[Route('/rates/{date}/{code}/{baseCode}', name: 'app_currency', methods: ['GET'])]
+    #[Route('/rates/{date}/{code}/{baseCode}', name: 'app_currency_with_base', methods: ['GET'])]
+    #[Route('/rates/{date}/{code}', name: 'app_currency', methods: ['GET'])]
     public function rates(
         CbrRatesValidatorInterface $validator,
         CbrRatesCalculatorInterface $calculator,

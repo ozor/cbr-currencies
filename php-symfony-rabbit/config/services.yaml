@@ -1,9 +1,10 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 # This file is the entry point to configure your own services.
 # Files in the packages/ subdirectory configure your dependencies.
 
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
-parameters:
+#parameters:
 
 services:
     # default configuration for services in *this* file
@@ -27,6 +28,13 @@ services:
     App\Exception\ExceptionHandler:
         tags:
             - { name: kernel.event_listener, event: kernel.exception, method: handleApiException }
+
+
+    App\Messenger\MessageHandler\CbrRatesCacheUpdateHandler:
+        arguments:
+            $logger: '@monolog.logger.messenger'
+        tags:
+            - { name: 'messenger.message_handler' }
 
     App\Contract\CbrRatesCalculatorInterface:
         class: App\Service\CbrRates\CbrRatesCalculatorProxy

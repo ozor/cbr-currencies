@@ -24,6 +24,22 @@ services:
       - redis
       - rabbitmq
 
+  worker:
+    restart: always
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    volumes:
+      - *volume_root_project
+    networks:
+      - docker
+    entrypoint: ["worker-entrypoint.sh"]
+    command: []
+    depends_on:
+      - app
+      - redis
+      - rabbitmq
+
   nginx:
     restart: always
     image: nginx:latest
@@ -40,10 +56,13 @@ services:
   redis:
     restart: always
     image: redis:latest
+    volumes:
+      - "redis-data:/data"
     ports:
       - "16379:6379"
     networks:
       - docker
+    command: redis-server --appendonly yes
 
   rabbitmq:
     restart: always
@@ -62,3 +81,4 @@ services:
 
 volumes:
   rabbitmq-data:
+  redis-data:

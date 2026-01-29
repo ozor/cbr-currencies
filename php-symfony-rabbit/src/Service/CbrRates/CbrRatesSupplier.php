@@ -11,12 +11,13 @@ use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class CbrRatesSupplier implements CbrRatesSupplierInterface
 {
-    private const URL_DAILY = '/scripts/XML_daily.asp';
-    private const FORMAT_XML = 'xml';
+    private const string URL_DAILY = '/scripts/XML_daily.asp';
+    private const string FORMAT_XML = 'xml';
 
     public function __construct(
         private readonly SerializerInterface $serializer,
