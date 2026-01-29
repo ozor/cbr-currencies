@@ -164,7 +164,7 @@ docker-compose logs -f worker
 docker-compose logs -f app
 ```
 
-**RabbitMQ Management UI:**
+### RabbitMQ Management UI
 
 Откройте http://localhost:15673
 
@@ -176,6 +176,34 @@ docker-compose logs -f app
 - Просматривать очереди и количество сообщений
 - Мониторить производительность worker'ов
 - Анализировать failed сообщения
+
+### Полезные команды
+
+```bash
+# Список доступных транспортов
+docker-compose exec app php bin/console messenger:stats
+
+# Обработка сообщений с подробным выводом
+docker-compose exec app php bin/console messenger:consume async -vv
+
+# Просмотр failed сообщений
+docker-compose exec app php bin/console messenger:failed:show
+
+# Повторная обработка failed сообщений
+docker-compose exec app php bin/console messenger:failed:retry
+
+# Очистка всех failed сообщений
+docker-compose exec app php bin/console messenger:failed:remove
+
+# Просмотр логов
+docker-compose logs -f app
+
+# Проверка кеша Redis
+docker-compose exec redis redis-cli
+> KEYS *
+> GET "cache_key"
+> TTL "cache_key"
+```
 
 ### Ручное управление кешем (опционально)
 
@@ -243,41 +271,6 @@ docker-compose logs -f worker
 ## Переменные окружения
 
 Ключевые переменные описаны в `.env`
-
-## Мониторинг и отладка
-
-### RabbitMQ Management UI
-- URL: http://localhost:15673
-- Логин: `rabbitmq` / Пароль: `rabbitmq`
-- Просмотр очередей, exchanges, сообщений
-
-### Полезные команды
-
-```bash
-# Список доступных транспортов
-docker-compose exec app php bin/console messenger:stats
-
-# Обработка сообщений с подробным выводом
-docker-compose exec app php bin/console messenger:consume async -vv
-
-# Просмотр failed сообщений
-docker-compose exec app php bin/console messenger:failed:show
-
-# Повторная обработка failed сообщений
-docker-compose exec app php bin/console messenger:failed:retry
-
-# Очистка всех failed сообщений
-docker-compose exec app php bin/console messenger:failed:remove
-
-# Просмотр логов
-docker-compose logs -f app
-
-# Проверка кеша Redis
-docker-compose exec redis redis-cli
-> KEYS *
-> GET "cache_key"
-> TTL "cache_key"
-```
 
 ## Структура проекта
 
