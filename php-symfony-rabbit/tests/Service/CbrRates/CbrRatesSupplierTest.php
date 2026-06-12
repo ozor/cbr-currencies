@@ -4,17 +4,13 @@ namespace App\Tests\Service\CbrRates;
 
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
-use App\Messenger\Message\CbrRatesRequestMessage;
+use App\Service\CbrRates\CbrHttpClient;
 use App\Service\CbrRates\CbrRatesSupplier;
 use DateTimeImmutable;
-use DG\BypassFinals;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\HandledStamp;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
 
 class CbrRatesSupplierTest extends TestCase
 {
@@ -23,14 +19,8 @@ class CbrRatesSupplierTest extends TestCase
     /** @var MockObject&SerializerInterface */
     private SerializerInterface $serializer;
 
-    /** @var MockObject&Envelope */
-    private Envelope $envelope;
-
-    /** @var MockObject&HandledStamp */
-    private HandledStamp $handledStamp;
-
-    /** @var MockObject&MessageBusInterface */
-    private MessageBusInterface $messageBus;
+    /** @var MockObject&CbrHttpClient */
+    private CbrHttpClient $cbrHttpClient;
 
     private CbrRatesDto $cbrRatesDto;
     private CbrRatesDto $cbrRatesDtoFinal;
@@ -45,32 +35,29 @@ class CbrRatesSupplierTest extends TestCase
         $this->cbrRatesDtoFinal = new CbrRatesDto($this->date, [$usd, $rur]);
 
         $this->serializer = $this->createMock(SerializerInterface::class);
-        $this->messageBus = $this->createMock(MessageBusInterface::class);
-
-        BypassFinals::enable();
-        $this->envelope = $this->createStub(Envelope::class);
-        $this->handledStamp = $this->createStub(HandledStamp::class);
+        $this->cbrHttpClient = $this->createMock(CbrHttpClient::class);
     }
 
-    public function testGetDailyByDate()
+    /**
+     * @throws ExceptionInterface
+     */
+    public function testGetDailyByDate(): void
     {
-        $this->messageBus
-            ->expects($this->once())
-            ->method('dispatch')
-            ->with($this->isInstanceOf(CbrRatesRequestMessage::class))
-            ->willReturn($this->envelope);
+        $xmlContent = '<ValCurs></ValCurs>';
 
-        $this->envelope
+        $this->cbrHttpClient
             ->expects($this->once())
-            ->method('last')
-            ->willReturn($this->handledStamp);
+            ->method('getDailyXmlByDate')
+            ->with($this->date)
+            ->willReturn($xmlContent);
 
         $this->serializer
             ->expects($this->once())
             ->method('deserialize')
+            ->with($xmlContent, CbrRatesDto::class, 'xml')
             ->willReturn($this->cbrRatesDto);
 
-        $service = new CbrRatesSupplier($this->serializer, $this->messageBus);
+        $service = new CbrRatesSupplier($this->serializer, $this->cbrHttpClient);
 
         $result = $service->getDailyByDate($this->date);
 

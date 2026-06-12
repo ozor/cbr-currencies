@@ -5,8 +5,6 @@ framework:
 
         transports:
             # https://symfony.com/doc/current/messenger.html#transport-configuration
-            # Синхронный транспорт для немедленной обработки
-            sync: 'sync://'
 
             # Асинхронный транспорт через RabbitMQ
             async:
@@ -38,11 +36,6 @@ framework:
                             binding_keys: [ failed ]
 
         routing:
-            # Маршрутизация сообщений
-            # Запросы к CBR обрабатываются СИНХРОННО для получения немедленного результата
-            # Результаты кешируются в Redis через CbrRatesSupplierProxy
-            'App\Messenger\Message\CbrRatesRequestMessage': sync
-
             # Фоновое обновление кеша выполняется АСИНХРОННО через RabbitMQ
             'App\Messenger\Message\CbrRatesCacheUpdateMessage': async
 
@@ -50,6 +43,5 @@ when@test:
     framework:
         messenger:
             transports:
-                # В тестовом окружении используем синхронный in-memory транспорт
+                # В тестовом окружении используем in-memory транспорт
                 async: 'in-memory://'
-                sync: 'sync://'
