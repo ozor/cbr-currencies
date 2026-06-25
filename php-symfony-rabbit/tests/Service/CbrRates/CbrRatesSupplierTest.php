@@ -6,24 +6,23 @@ use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Service\CbrRates\CbrHttpClient;
 use App\Service\CbrRates\CbrRatesSupplier;
+use App\Service\CbrRates\XmlRateParser;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Serializer\Exception\ExceptionInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class CbrRatesSupplierTest extends TestCase
 {
     private DateTimeImmutable $date;
 
-    /** @var MockObject&SerializerInterface */
-    private SerializerInterface $serializer;
-
     /** @var MockObject&CbrHttpClient */
     private CbrHttpClient $cbrHttpClient;
 
-    private CbrRatesDto $cbrRatesDto;
-    private CbrRatesDto $cbrRatesDtoFinal;
+    /** @var MockObject&XmlRateParser */
+    private XmlRateParser $xmlRateParser;
+
+    private CbrRatesDto $parsedDto;
+    private CbrRatesDto $expectedFinalDto;
 
     public function setUp(): void
     {
@@ -31,16 +30,13 @@ class CbrRatesSupplierTest extends TestCase
 
         $usd = new CbrRateDto('USD', 1, 73.1234, 73.1234);
         $rur = new CbrRateDto('RUR', 1, 1.0, 1.0);
-        $this->cbrRatesDto = new CbrRatesDto($this->date, [$usd]);
-        $this->cbrRatesDtoFinal = new CbrRatesDto($this->date, [$usd, $rur]);
+        $this->parsedDto       = new CbrRatesDto($this->date, [$usd]);
+        $this->expectedFinalDto = new CbrRatesDto($this->date, [$usd, $rur]);
 
-        $this->serializer = $this->createMock(SerializerInterface::class);
         $this->cbrHttpClient = $this->createMock(CbrHttpClient::class);
+        $this->xmlRateParser  = $this->createMock(XmlRateParser::class);
     }
 
-    /**
-     * @throws ExceptionInterface
-     */
     public function testGetDailyByDate(): void
     {
         $xmlContent = '<ValCurs></ValCurs>';
@@ -51,16 +47,30 @@ class CbrRatesSupplierTest extends TestCase
             ->with($this->date)
             ->willReturn($xmlContent);
 
-        $this->serializer
+        $this->xmlRateParser
             ->expects($this->once())
-            ->method('deserialize')
-            ->with($xmlContent, CbrRatesDto::class, 'xml')
-            ->willReturn($this->cbrRatesDto);
+            ->method('parse')
+            ->with($xmlContent)
+            ->willReturn($this->parsedDto);
 
-        $service = new CbrRatesSupplier($this->serializer, $this->cbrHttpClient);
+        $supplier = new CbrRatesSupplier($this->cbrHttpClient, $this->xmlRateParser);
 
-        $result = $service->getDailyByDate($this->date);
+        $result = $supplier->getDailyByDate($this->date);
 
-        $this->assertEquals($this->cbrRatesDtoFinal, $result);
+        $this->assertEquals($this->expectedFinalDto, $result);
+    }
+
+    public function testSupplierAddsBaseCurrency(): void
+    {
+        $xmlContent = '<ValCurs></ValCurs>';
+
+        $this->cbrHttpClient->method('getDailyXmlByDate')->willReturn($xmlContent);
+        $this->xmlRateParser->method('parse')->willReturn($this->parsedDto);
+
+        $supplier = new CbrRatesSupplier($this->cbrHttpClient, $this->xmlRateParser);
+        $result   = $supplier->getDailyByDate($this->date);
+
+        $codes = array_map(fn(CbrRateDto $r) => $r->code, $result->rates);
+        $this->assertContains('RUR', $codes);
     }
 }
