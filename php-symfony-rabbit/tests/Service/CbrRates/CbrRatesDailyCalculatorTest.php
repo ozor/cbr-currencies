@@ -3,48 +3,76 @@
 namespace App\Tests\Service\CbrRates;
 
 use App\Config\CbrRates;
+use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
-use App\Repository\CbrRatesRepository;
+use App\Dto\CbrRates\CbrRatesDto;
+use App\Exception\CbrRates\CbrRateNotFoundException;
 use App\Service\CbrRates\CbrRatesCalculator;
+use App\Service\CbrRates\RateFinder;
+use DateMalformedStringException;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class CbrRatesDailyCalculatorTest extends TestCase
 {
     private DateTimeImmutable $date;
+    private DateTimeImmutable $datePrev;
 
-    /** @var MockObject&CbrRatesRepository */
-    private CbrRatesRepository $cbrRatesRepository;
+    /** @var MockObject&RatesProviderInterface */
+    private RatesProviderInterface $ratesProvider;
 
+    private RateFinder $rateFinder;
+
+    /**
+     * @throws DateMalformedStringException
+     */
     public function setUp(): void
     {
         $this->date = new DateTimeImmutable('2023-10-25');
+        $this->datePrev = $this->date->modify('-1 day');
 
-        $this->cbrRatesRepository = $this->createMock(CbrRatesRepository::class);
+        $this->ratesProvider = $this->createMock(RatesProviderInterface::class);
+        $this->rateFinder = new RateFinder($this->createMock(LoggerInterface::class));
     }
 
-    public function testCalculateRateReturnsExpectedResult()
+    /**
+     * @throws DateMalformedStringException
+     */
+    public function testCalculateRateReturnsExpectedResult(): void
     {
         $date = $this->date;
-        $datePrev = $this->date->modify('-1 day');
+        $datePrev = $this->datePrev;
 
         $requestDto = new CbrRateRequestDto($date->format(CbrRates::RATE_REQUEST_DATE_FORMAT), 'USD', 'EUR');
 
-        $this->cbrRatesRepository
+        $snapshotCurrent = new CbrRatesDto($date, [
+            new CbrRateDto('USD', 1, 75.0, 75.0),
+            new CbrRateDto('EUR', 1, 85.0, 85.0),
+        ]);
+
+        $snapshotPrev = new CbrRatesDto($datePrev, [
+            new CbrRateDto('USD', 1, 74.5, 74.5),
+            new CbrRateDto('EUR', 1, 84.5, 84.5),
+        ]);
+
+        $this->ratesProvider
             ->expects($this->exactly(4))
-            ->method('findOneByDateAndCode')
-            ->willReturn(
-                new CbrRateDto('USD', 1, 75.0, 75.0),
-                new CbrRateDto('USD', 1, 74.5, 74.5),
-                new CbrRateDto('EUR', 1, 85.0, 85.0),
-                new CbrRateDto('EUR', 1, 84.5, 84.5)
+            ->method('getDailyByDate')
+            ->willReturnCallback(
+                function (DateTimeImmutable $d) use ($date, $datePrev, $snapshotCurrent, $snapshotPrev): CbrRatesDto {
+                    if ($d->format('Y-m-d') === $date->format('Y-m-d')) {
+                        return $snapshotCurrent;
+                    }
+                    return $snapshotPrev;
+                }
             );
 
-        $calculator = new CbrRatesCalculator($this->cbrRatesRepository);
+        $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder);
 
         $result = $calculator->calculate($requestDto);
 
@@ -56,5 +84,28 @@ class CbrRatesDailyCalculatorTest extends TestCase
         );
 
         $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * @throws DateMalformedStringException
+     */
+    public function testCalculateThrowsWhenSnapshotIsNull(): void
+    {
+        $date = $this->date;
+        $requestDto = new CbrRateRequestDto($date->format(
+            CbrRates::RATE_REQUEST_DATE_FORMAT),
+            'USD',
+            'EUR'
+        );
+
+        $this->ratesProvider
+            ->method('getDailyByDate')
+            ->willReturn(null);
+
+        $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder);
+
+        $this->expectException(CbrRateNotFoundException::class);
+
+        $calculator->calculate($requestDto);
     }
 }

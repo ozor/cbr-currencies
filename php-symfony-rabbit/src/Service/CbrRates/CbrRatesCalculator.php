@@ -4,22 +4,31 @@ namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
 use App\Contract\CbrRatesCalculatorInterface;
+use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
-use App\Repository\CbrRatesRepository;
+use App\Exception\CbrRates\CbrRateNotFoundException;
+use DateMalformedStringException;
 use DateTimeImmutable;
 
 readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
 {
     public function __construct(
-        private CbrRatesRepository $cbrRatesRepository,
+        private RatesProviderInterface $ratesProvider,
+        private RateFinder $rateFinder,
     ) {
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function calculate(CbrRateRequestDto $requestDto): CbrRateResponseDto
     {
-        $date = DateTimeImmutable::createFromFormat(CbrRates::RATE_REQUEST_DATE_FORMAT, $requestDto->date)->setTime(0, 0, 0);
+        $date = DateTimeImmutable::createFromFormat(
+            CbrRates::RATE_REQUEST_DATE_FORMAT,
+            $requestDto->date,
+        )->setTime(0, 0, 0);
 
         $rate = $this->calculateRate($date, $requestDto->code);
         $baseRate = $this->calculateRate($date, $requestDto->baseCode);
@@ -40,10 +49,25 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
         );
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     private function calculateRate(DateTimeImmutable $date, string $code): CbrRateResponsePropertyDto
     {
-        $rate = $this->cbrRatesRepository->findOneByDateAndCode($date, $code);
-        $ratePrev = $this->cbrRatesRepository->findOneByDateAndCode($date->modify('-1 day'), $code);
+        $datePrev = $date->modify('-1 day');
+
+        $snapshot = $this->ratesProvider->getDailyByDate($date);
+        if ($snapshot === null) {
+            throw new CbrRateNotFoundException();
+        }
+
+        $snapshotPrev = $this->ratesProvider->getDailyByDate($datePrev);
+        if ($snapshotPrev === null) {
+            throw new CbrRateNotFoundException();
+        }
+
+        $rate = $this->rateFinder->find($snapshot, $code, $date);
+        $ratePrev = $this->rateFinder->find($snapshotPrev, $code, $datePrev);
 
         return new CbrRateResponsePropertyDto(
             code: $rate->code,

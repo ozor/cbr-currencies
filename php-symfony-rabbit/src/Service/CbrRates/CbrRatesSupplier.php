@@ -4,16 +4,17 @@ namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
 use App\Contract\CbrRatesSupplierInterface;
+use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\CbrRatesParseException;
 use DateTimeImmutable;
 
-class CbrRatesSupplier implements CbrRatesSupplierInterface
+readonly class CbrRatesSupplier implements CbrRatesSupplierInterface, RatesProviderInterface
 {
     public function __construct(
-        private readonly CbrHttpClient $cbrHttpClient,
-        private readonly XmlRateParser  $xmlRateParser,
+        private CbrHttpClient $cbrHttpClient,
+        private XmlRateParser $xmlRateParser,
     ) {
     }
 

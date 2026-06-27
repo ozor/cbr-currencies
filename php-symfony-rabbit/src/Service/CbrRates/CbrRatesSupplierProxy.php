@@ -4,6 +4,7 @@ namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
 use App\Contract\CbrRatesSupplierInterface;
+use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRatesDto;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
@@ -11,7 +12,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Throwable;
 
-readonly class CbrRatesSupplierProxy implements CbrRatesSupplierInterface
+readonly class CbrRatesSupplierProxy implements CbrRatesSupplierInterface, RatesProviderInterface
 {
     public function __construct(
         private CacheInterface $cache,
