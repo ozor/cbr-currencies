@@ -2,7 +2,7 @@
 
 namespace App\Messenger\MessageHandler;
 
-use App\Contract\CbrRatesSupplierInterface;
+use App\Contract\RatesProviderInterface;
 use App\Messenger\Message\CbrRatesCacheUpdateMessage;
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -16,7 +16,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 readonly class CbrRatesCacheUpdateHandler
 {
     public function __construct(
-        private CbrRatesSupplierInterface $cbrRatesSupplier,
+        private RatesProviderInterface $ratesProvider,
         private LoggerInterface $logger,
     ) {
     }
@@ -32,7 +32,7 @@ readonly class CbrRatesCacheUpdateHandler
         ]);
 
         try {
-            $rates = $this->cbrRatesSupplier->getDailyByDate($message->date);
+            $rates = $this->ratesProvider->getDailyByDate($message->date);
 
             if ($rates) {
                 $this->logger->info('Successfully updated cache for CBR rates', [

@@ -7,15 +7,14 @@
 
 ## Big picture architecture
 - HTTP entrypoint: `GET /api/v1/cbr/rates/{date}/{code}/{baseCode?}` in `src/Controller/CbrController.php`.
-- API flow: controller -> validator -> calculator proxy -> calculator -> **provider** -> supplier proxy -> supplier.
-- `CbrRatesCalculator` depends on `RatesProviderInterface` (bound to `CbrRatesSupplierProxy`) and `RateFinder`.
+- API flow: controller -> validator -> calculator -> **cached provider** -> supplier.
+- `CbrRatesCalculator` depends on `RatesProviderInterface` (bound to `CachedRatesProvider`) and `RateFinder`.
 - `RateFinder` (`src/Service/CbrRates/RateFinder.php`) locates a `CbrRateDto` inside a `CbrRatesDto` snapshot; throws `CbrRateNotFoundException` when absent.
 - Fetching a daily snapshot is the responsibility of `RatesProviderInterface`; looking up a single rate inside a snapshot is the responsibility of `RateFinder`.
+- `CachedRatesProvider` (`src/Infrastructure/Cache/CachedRatesProvider.php`) is the single cache layer for daily snapshots (cache key: `CbrRatesDaily.{Y-m-d}`, TTL 86400, Redis via Symfony Cache); on cache `Throwable` it falls back to direct `CbrRatesSupplier` call.
 - Cache miss calls CBR directly via `CbrHttpClient` + `XmlRateParser` inside `CbrRatesSupplier`.
 - Background warmup uses `CbrRatesCacheUpdateMessage` -> `async` transport -> RabbitMQ -> `CbrRatesCacheUpdateHandler`.
-- Two cache layers (Redis via Symfony Cache):
-  - supplier cache key: `CbrRatesDaily.{Y-m-d}` in `CbrRatesSupplierProxy`;
-  - calculator cache key: `CbrRatesDailyCalculator.{date}.{code}.{baseCode}` in `CbrRatesCalculatorProxy`.
+- Single cache layer (Redis via Symfony Cache): snapshot key `CbrRatesDaily.{Y-m-d}` in `CachedRatesProvider`.
 
 ## Data and validation conventions
 - Request date format is strict `Y-m-d` (`src/Config/CbrRates.php` + `CbrRateRequestDto` constraints).
@@ -29,6 +28,7 @@
 - RabbitMQ DSN comes from `MESSENGER_TRANSPORT_DSN` (`.env`); `async` and `failed` transports are declared in `config/packages/messenger.yaml`.
 - HTTP client `cbr_rates.client` is configured in `config/packages/framework.yaml` with retry strategy (429/500/network).
 - There is no sync request message/handler path in current runtime config; Messenger is used for async cache warmup only.
+- `CbrRatesCacheUpdateHandler` uses `RatesProviderInterface` (resolved to `CachedRatesProvider`) so warmup primes exactly the same cache layer the API reads from.
 - Redis backend is `cache.adapter.redis` (`config/packages/cache.yaml`, `REDIS_DSN`).
 
 ## Developer workflows that matter
@@ -41,11 +41,11 @@
 ## Project-specific coding/test patterns
 - Use `readonly` DTO/service style and constructor promotion used across `src/Dto` and `src/Service`.
 - Prefer contract injection via DI aliases in `config/services.yaml`:
-  - `CbrRatesCalculatorInterface` -> `CbrRatesCalculatorProxy`;
-  - `CbrRatesSupplierInterface` -> `CbrRatesSupplierProxy`;
-  - `RatesProviderInterface` -> `CbrRatesSupplierProxy` (used by `CbrRatesCalculator` for snapshot fetching).
-- `RatesProviderInterface` and `CbrRatesSupplierInterface` are two independent interfaces; both are implemented by `CbrRatesSupplier` and `CbrRatesSupplierProxy`.
-- Cache proxies (`CbrRatesSupplierProxy`, `CbrRatesCalculatorProxy`) catch cache-layer `Throwable`, log context, and fallback to direct call; keep this resilience pattern.
+  - `CbrRatesCalculatorInterface` -> `CbrRatesCalculator` (direct, no proxy);
+  - `CbrRatesSupplierInterface` -> `CbrRatesSupplier`;
+  - `RatesProviderInterface` -> `CachedRatesProvider` (used by `CbrRatesCalculator` for snapshot fetching).
+- `RatesProviderInterface` and `CbrRatesSupplierInterface` are two independent interfaces; `CbrRatesSupplier` implements both. `CachedRatesProvider` implements only `RatesProviderInterface` and wraps `CbrRatesSupplier` (injected as concrete class to avoid circular DI).
+- `CachedRatesProvider` catches cache-layer `Throwable`, logs context, and falls back to direct `CbrRatesSupplier` call; keep this resilience pattern when adding new cache decorators.
 - For async handlers, rethrow exceptions to activate Messenger retry (`CbrRatesCacheUpdateHandler`).
 - Tests are mostly unit tests with mocks/stubs under `tests/**`; keep new tests isolated from external services. In `test` env, Messenger `async` transport is overridden to `in-memory://` (`config/packages/messenger.yaml`).
-
+- `CachedRatesProvider` is tested in `tests/Infrastructure/Cache/CachedRatesProviderTest.php`.

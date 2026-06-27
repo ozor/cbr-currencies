@@ -37,17 +37,17 @@ services:
             - { name: 'messenger.message_handler' }
 
     App\Contract\CbrRatesCalculatorInterface:
-        class: App\Service\CbrRates\CbrRatesCalculatorProxy
+        class: App\Service\CbrRates\CbrRatesCalculator
         autowire: true
         public: true
 
     App\Contract\CbrRatesSupplierInterface:
-        class: App\Service\CbrRates\CbrRatesSupplierProxy
+        class: App\Service\CbrRates\CbrRatesSupplier
         autowire: true
         public: true
 
     App\Contract\RatesProviderInterface:
-        class: App\Service\CbrRates\CbrRatesSupplierProxy
+        class: App\Infrastructure\Cache\CachedRatesProvider
         autowire: true
         public: true
 

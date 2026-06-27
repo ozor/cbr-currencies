@@ -2,7 +2,7 @@
 
 namespace App\Tests\Messenger\MessageHandler;
 
-use App\Contract\CbrRatesSupplierInterface;
+use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Messenger\Message\CbrRatesCacheUpdateMessage;
@@ -15,8 +15,8 @@ use Psr\Log\LoggerInterface;
 
 class CbrRatesCacheUpdateHandlerTest extends TestCase
 {
-    /** @var MockObject&CbrRatesSupplierInterface */
-    private CbrRatesSupplierInterface $supplier;
+    /** @var MockObject&RatesProviderInterface */
+    private RatesProviderInterface $ratesProvider;
 
     /** @var MockObject&LoggerInterface */
     private LoggerInterface $logger;
@@ -25,11 +25,11 @@ class CbrRatesCacheUpdateHandlerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->supplier = $this->createMock(CbrRatesSupplierInterface::class);
+        $this->ratesProvider = $this->createMock(RatesProviderInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->handler = new CbrRatesCacheUpdateHandler(
-            $this->supplier,
+            $this->ratesProvider,
             $this->logger
         );
     }
@@ -46,7 +46,7 @@ class CbrRatesCacheUpdateHandlerTest extends TestCase
             new CbrRateDto('USD', 1, 75.0, 75.0),
         ]);
 
-        $this->supplier->expects($this->once())
+        $this->ratesProvider->expects($this->once())
             ->method('getDailyByDate')
             ->with($date)
             ->willReturn($rates);
@@ -65,7 +65,7 @@ class CbrRatesCacheUpdateHandlerTest extends TestCase
         $date = new DateTimeImmutable('2023-10-25');
         $message = new CbrRatesCacheUpdateMessage($date);
 
-        $this->supplier->expects($this->once())
+        $this->ratesProvider->expects($this->once())
             ->method('getDailyByDate')
             ->with($date)
             ->willReturn(null);
@@ -86,7 +86,7 @@ class CbrRatesCacheUpdateHandlerTest extends TestCase
 
         $exception = new Exception('Test exception');
 
-        $this->supplier->expects($this->once())
+        $this->ratesProvider->expects($this->once())
             ->method('getDailyByDate')
             ->with($date)
             ->willThrowException($exception);

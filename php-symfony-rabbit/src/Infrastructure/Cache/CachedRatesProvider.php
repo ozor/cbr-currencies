@@ -1,22 +1,22 @@
 <?php
 
-namespace App\Service\CbrRates;
+namespace App\Infrastructure\Cache;
 
 use App\Config\CbrRates;
-use App\Contract\CbrRatesSupplierInterface;
 use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRatesDto;
+use App\Service\CbrRates\CbrRatesSupplier;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Throwable;
 
-readonly class CbrRatesSupplierProxy implements CbrRatesSupplierInterface, RatesProviderInterface
+readonly class CachedRatesProvider implements RatesProviderInterface
 {
     public function __construct(
         private CacheInterface $cache,
-        private CbrRatesSupplier $cbrRatesSupplier,
+        private CbrRatesSupplier $innerProvider,
         private LoggerInterface $logger,
     ) {
     }
@@ -37,14 +37,13 @@ readonly class CbrRatesSupplierProxy implements CbrRatesSupplierInterface, Rates
             return $this->cache->get(
                 $cacheKey,
                 function (ItemInterface $item) use ($date, $cacheKey): ?CbrRatesDto {
-                    $this->logger->info('Cache miss, fetching from supplier', [
+                    $this->logger->info('Cache miss, fetching from provider', [
                         'cache_key' => $cacheKey,
                     ]);
 
-                    // Кешируем на 24 часа
                     $item->expiresAfter(86400);
 
-                    $result = $this->cbrRatesSupplier->getDailyByDate($date);
+                    $result = $this->innerProvider->getDailyByDate($date);
 
                     if ($result) {
                         $this->logger->info('Successfully fetched and cached rates', [
@@ -52,7 +51,7 @@ readonly class CbrRatesSupplierProxy implements CbrRatesSupplierInterface, Rates
                             'rates_count' => count($result->rates),
                         ]);
                     } else {
-                        $this->logger->warning('No rates returned from supplier', [
+                        $this->logger->warning('No rates returned from provider', [
                             'cache_key' => $cacheKey,
                         ]);
                     }
@@ -61,14 +60,13 @@ readonly class CbrRatesSupplierProxy implements CbrRatesSupplierInterface, Rates
                 }
             );
         } catch (Throwable $e) {
-            $this->logger->error('Cache error, falling back to direct supplier call', [
+            $this->logger->error('Cache error, falling back to direct provider call', [
                 'cache_key' => $cacheKey,
                 'error' => $e->getMessage(),
                 'error_type' => get_class($e),
             ]);
 
-            // В случае ошибки кеша - обращаемся напрямую
-            return $this->cbrRatesSupplier->getDailyByDate($date);
+            return $this->innerProvider->getDailyByDate($date);
         }
     }
 }
