@@ -8,9 +8,10 @@
 ## Big picture architecture
 - HTTP entrypoint: `GET /api/v1/cbr/rates/{date}/{code}/{baseCode?}` in `src/Controller/CbrController.php`.
 - API flow: controller -> validator -> calculator -> **cached provider** -> supplier.
-- `CbrRatesCalculator` depends on `RatesProviderInterface` (bound to `CachedRatesProvider`) and `RateFinder`.
+- `CbrRatesCalculator` depends on `RatesProviderInterface` (bound to `CachedRatesProvider`), `RateFinder`, and `PreviousTradingDayResolver`.
 - `RateFinder` (`src/Service/CbrRates/RateFinder.php`) locates a `CbrRateDto` inside a `CbrRatesDto` snapshot; throws `CbrRateNotFoundException` when absent.
-- Fetching a daily snapshot is the responsibility of `RatesProviderInterface`; looking up a single rate inside a snapshot is the responsibility of `RateFinder`.
+- Fetching a daily snapshot is the responsibility of `RatesProviderInterface`; looking up a single rate inside a snapshot is the responsibility of `RateFinder`; finding the previous available trading date is the responsibility of `PreviousTradingDayResolver`.
+- `PreviousTradingDayResolver` (`src/Domain/Calendar/PreviousTradingDayResolver.php`) determines the previous available trading date by walking back up to `MAX_LOOKBACK_DAYS = 15` days and probing `RatesProviderInterface::getDailyByDate()`; throws `PreviousTradingDayNotFoundException` if no snapshot is found within the limit.
 - `CachedRatesProvider` (`src/Infrastructure/Cache/CachedRatesProvider.php`) is the single cache layer for daily snapshots (cache key: `CbrRatesDaily.{Y-m-d}`, TTL 86400, Redis via Symfony Cache); on cache `Throwable` it falls back to direct `CbrRatesSupplier` call.
 - Cache miss calls CBR directly via `CbrHttpClient` + `XmlRateParser` inside `CbrRatesSupplier`.
 - Background warmup uses `CbrRatesCacheUpdateMessage` -> `async` transport -> RabbitMQ -> `CbrRatesCacheUpdateHandler`.
@@ -43,9 +44,12 @@
 - Prefer contract injection via DI aliases in `config/services.yaml`:
   - `CbrRatesCalculatorInterface` -> `CbrRatesCalculator` (direct, no proxy);
   - `CbrRatesSupplierInterface` -> `CbrRatesSupplier`;
-  - `RatesProviderInterface` -> `CachedRatesProvider` (used by `CbrRatesCalculator` for snapshot fetching).
+  - `RatesProviderInterface` -> `CachedRatesProvider` (used by `CbrRatesCalculator` for snapshot fetching and by `PreviousTradingDayResolver` for trading-day probing).
 - `RatesProviderInterface` and `CbrRatesSupplierInterface` are two independent interfaces; `CbrRatesSupplier` implements both. `CachedRatesProvider` implements only `RatesProviderInterface` and wraps `CbrRatesSupplier` (injected as concrete class to avoid circular DI).
 - `CachedRatesProvider` catches cache-layer `Throwable`, logs context, and falls back to direct `CbrRatesSupplier` call; keep this resilience pattern when adding new cache decorators.
+- `PreviousTradingDayResolver` (`src/Domain/Calendar/PreviousTradingDayResolver.php`) is a pure domain service: it accepts a `DateTimeImmutable` date and returns the nearest previous date for which `RatesProviderInterface::getDailyByDate()` returns a non-null snapshot; walks back one day at a time; constant `MAX_LOOKBACK_DAYS = 15`; throws `PreviousTradingDayNotFoundException` (extends `NotFoundHttpException`, implements `CbrRatesExceptionInterface`) when no snapshot is found within the limit. Does **not** contain HTTP, XML, or cache logic.
+- `CbrRatesCalculator` no longer contains calendar arithmetic; it delegates previous-trading-day resolution to `PreviousTradingDayResolver` injected via constructor.
 - For async handlers, rethrow exceptions to activate Messenger retry (`CbrRatesCacheUpdateHandler`).
 - Tests are mostly unit tests with mocks/stubs under `tests/**`; keep new tests isolated from external services. In `test` env, Messenger `async` transport is overridden to `in-memory://` (`config/packages/messenger.yaml`).
 - `CachedRatesProvider` is tested in `tests/Infrastructure/Cache/CachedRatesProviderTest.php`.
+- `PreviousTradingDayResolver` is tested in `tests/Domain/Calendar/PreviousTradingDayResolverTest.php`; scenarios: first attempt success, skip unavailable weekend days, find within limit, throw when limit exhausted (15 attempts).

@@ -4,12 +4,14 @@ namespace App\Tests\Service\CbrRates;
 
 use App\Config\CbrRates;
 use App\Contract\RatesProviderInterface;
+use App\Domain\Calendar\PreviousTradingDayResolver;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\CbrRateNotFoundException;
+use App\Exception\CbrRates\PreviousTradingDayNotFoundException;
 use App\Service\CbrRates\CbrRatesCalculator;
 use App\Service\CbrRates\RateFinder;
 use DateMalformedStringException;
@@ -26,6 +28,9 @@ class CbrRatesDailyCalculatorTest extends TestCase
     /** @var MockObject&RatesProviderInterface */
     private RatesProviderInterface $ratesProvider;
 
+    /** @var MockObject&PreviousTradingDayResolver */
+    private PreviousTradingDayResolver $previousTradingDayResolver;
+
     private RateFinder $rateFinder;
 
     /**
@@ -34,9 +39,10 @@ class CbrRatesDailyCalculatorTest extends TestCase
     public function setUp(): void
     {
         $this->date = new DateTimeImmutable('2023-10-25');
-        $this->datePrev = $this->date->modify('-1 day');
+        $this->datePrev = new DateTimeImmutable('2023-10-24');
 
         $this->ratesProvider = $this->createMock(RatesProviderInterface::class);
+        $this->previousTradingDayResolver = $this->createMock(PreviousTradingDayResolver::class);
         $this->rateFinder = new RateFinder($this->createMock(LoggerInterface::class));
     }
 
@@ -60,6 +66,12 @@ class CbrRatesDailyCalculatorTest extends TestCase
             new CbrRateDto('EUR', 1, 84.5, 84.5),
         ]);
 
+        $this->previousTradingDayResolver
+            ->expects($this->exactly(2))
+            ->method('resolve')
+            ->with($this->callback(fn (DateTimeImmutable $d) => $d->format('Y-m-d') === $date->format('Y-m-d')))
+            ->willReturn($datePrev);
+
         $this->ratesProvider
             ->expects($this->exactly(4))
             ->method('getDailyByDate')
@@ -72,7 +84,7 @@ class CbrRatesDailyCalculatorTest extends TestCase
                 }
             );
 
-        $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder);
+        $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder, $this->previousTradingDayResolver);
 
         $result = $calculator->calculate($requestDto);
 
@@ -98,13 +110,44 @@ class CbrRatesDailyCalculatorTest extends TestCase
             'EUR'
         );
 
+        $this->previousTradingDayResolver
+            ->method('resolve')
+            ->willReturn($this->datePrev);
+
         $this->ratesProvider
             ->method('getDailyByDate')
             ->willReturn(null);
 
-        $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder);
+        $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder, $this->previousTradingDayResolver);
 
         $this->expectException(CbrRateNotFoundException::class);
+
+        $calculator->calculate($requestDto);
+    }
+
+    /**
+     * @throws DateMalformedStringException
+     */
+    public function testCalculateThrowsWhenResolverCannotFindPreviousTradingDay(): void
+    {
+        $date = $this->date;
+        $requestDto = new CbrRateRequestDto($date->format(
+            CbrRates::RATE_REQUEST_DATE_FORMAT),
+            'USD',
+            'EUR'
+        );
+
+        $this->previousTradingDayResolver
+            ->method('resolve')
+            ->willThrowException(new PreviousTradingDayNotFoundException());
+
+        $this->ratesProvider
+            ->method('getDailyByDate')
+            ->willReturn(new CbrRatesDto($date, []));
+
+        $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder, $this->previousTradingDayResolver);
+
+        $this->expectException(PreviousTradingDayNotFoundException::class);
 
         $calculator->calculate($requestDto);
     }

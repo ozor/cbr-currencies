@@ -5,6 +5,7 @@ namespace App\Service\CbrRates;
 use App\Config\CbrRates;
 use App\Contract\CbrRatesCalculatorInterface;
 use App\Contract\RatesProviderInterface;
+use App\Domain\Calendar\PreviousTradingDayResolver;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
@@ -17,6 +18,7 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
     public function __construct(
         private RatesProviderInterface $ratesProvider,
         private RateFinder $rateFinder,
+        private PreviousTradingDayResolver $previousTradingDayResolver,
     ) {
     }
 
@@ -54,7 +56,7 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
      */
     private function calculateRate(DateTimeImmutable $date, string $code): CbrRateResponsePropertyDto
     {
-        $datePrev = $date->modify('-1 day');
+        $datePrev = $this->previousTradingDayResolver->resolve($date);
 
         $snapshot = $this->ratesProvider->getDailyByDate($date);
         if ($snapshot === null) {
