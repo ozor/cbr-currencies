@@ -30,11 +30,6 @@ services:
             - { name: kernel.event_listener, event: kernel.exception, method: handleApiException }
 
 
-    App\Messenger\MessageHandler\CbrRatesCacheUpdateHandler:
-        arguments:
-            $logger: '@monolog.logger.messenger'
-        tags:
-            - { name: 'messenger.message_handler' }
 
     App\Contract\CbrRatesCalculatorInterface:
         class: App\Service\CbrRates\CbrRatesCalculator

@@ -2,8 +2,8 @@
 
 namespace App\Tests\Command;
 
-use App\Command\CbrWarmupCacheCommand;
-use App\Messenger\Message\CbrRatesCacheUpdateMessage;
+use App\Command\WarmupRatesCommand;
+use App\Messenger\Message\WarmupRatesMessage;
 use DG\BypassFinals;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -12,7 +12,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-class CbrWarmupCacheCommandTest extends TestCase
+class WarmupRatesCommandTest extends TestCase
 {
     /** @var MockObject&MessageBusInterface */
     private MessageBusInterface $messageBus;
@@ -27,15 +27,15 @@ class CbrWarmupCacheCommandTest extends TestCase
         $this->messageBus = $this->createMock(MessageBusInterface::class);
         $this->envelope = $this->createStub(Envelope::class);
 
-        $command = new CbrWarmupCacheCommand($this->messageBus);
+        $command = new WarmupRatesCommand($this->messageBus);
         $this->commandTester = new CommandTester($command);
     }
 
-    public function testExecuteWithDefaultParameters(): void
+    public function testExecuteDispatchesWarmupMessagesForPeriod(): void
     {
         $this->messageBus->expects($this->atLeast(1))
             ->method('dispatch')
-            ->with($this->isInstanceOf(CbrRatesCacheUpdateMessage::class))
+            ->with($this->isInstanceOf(WarmupRatesMessage::class))
             ->willReturn($this->envelope);
 
         $this->commandTester->execute([]);
@@ -49,7 +49,7 @@ class CbrWarmupCacheCommandTest extends TestCase
     {
         $this->messageBus->expects($this->atLeast(1))
             ->method('dispatch')
-            ->with($this->isInstanceOf(CbrRatesCacheUpdateMessage::class))
+            ->with($this->isInstanceOf(WarmupRatesMessage::class))
             ->willReturn($this->envelope);
 
         $this->commandTester->execute([
@@ -64,6 +64,7 @@ class CbrWarmupCacheCommandTest extends TestCase
 
     public function testExecuteSkipsWeekends(): void
     {
+        // 2024-01-14 — воскресенье, период 7 дней содержит оба выходных
         $this->messageBus->expects($this->atLeast(1))
             ->method('dispatch')
             ->willReturn($this->envelope);
@@ -75,6 +76,38 @@ class CbrWarmupCacheCommandTest extends TestCase
 
         $output = $this->commandTester->getDisplay();
         $this->assertStringContainsString('Пропуск', $output);
+        $this->assertEquals(Command::SUCCESS, $this->commandTester->getStatusCode());
+    }
+
+    public function testExecuteDispatchesCorrectNumberOfWorkdayMessages(): void
+    {
+        // Период 2024-01-08 (пн) … 2024-01-14 (вс): 7 дней, из них 5 рабочих
+        $dispatchCount = 0;
+        $this->messageBus
+            ->method('dispatch')
+            ->willReturnCallback(function () use (&$dispatchCount) {
+                $dispatchCount++;
+                return $this->envelope;
+            });
+
+        $this->commandTester->execute([
+            'start-date' => '2024-01-14',
+            '--days' => '7',
+        ]);
+
+        $this->assertEquals(5, $dispatchCount);
+        $this->assertEquals(Command::SUCCESS, $this->commandTester->getStatusCode());
+    }
+
+    public function testExecuteReturnsSuccessStatus(): void
+    {
+        $this->messageBus->method('dispatch')->willReturn($this->envelope);
+
+        $this->commandTester->execute([
+            'start-date' => '2024-06-30',
+            '--days' => '1',
+        ]);
+
         $this->assertEquals(Command::SUCCESS, $this->commandTester->getStatusCode());
     }
 

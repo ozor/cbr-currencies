@@ -26,8 +26,8 @@ fi
 # Очистка кеша
 php bin/console cache:clear --no-interaction
 
-# Прогрев кеша курсов валют за последние 180 дней
-php bin/console app:cbr:warmup-cache --days=180 || true
+# Прогрев snapshot'ов курсов валют за последние 180 дней
+php bin/console app:cbr:warmup-rates --days=180 || true
 
 echo "Application is ready!"
 

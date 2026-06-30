@@ -36,8 +36,8 @@ framework:
                             binding_keys: [ failed ]
 
         routing:
-            # Фоновое обновление кеша выполняется АСИНХРОННО через RabbitMQ
-            'App\Messenger\Message\CbrRatesCacheUpdateMessage': async
+            # Warmup snapshot'ов курсов ЦБ РФ выполняется АСИНХРОННО через RabbitMQ
+            'App\Messenger\Message\WarmupRatesMessage': async
 
 when@test:
     framework:
