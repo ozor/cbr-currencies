@@ -4,7 +4,7 @@ namespace App\Service\CbrRates;
 
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
-use App\Exception\CbrRates\CbrRateNotFoundException;
+use App\Exception\CbrRates\RateNotFoundException;
 use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 
@@ -16,7 +16,7 @@ readonly class RateFinder
     }
 
     /**
-     * @throws CbrRateNotFoundException
+     * @throws RateNotFoundException
      */
     public function find(CbrRatesDto $snapshot, string $code, DateTimeImmutable $date): CbrRateDto
     {
@@ -31,7 +31,8 @@ readonly class RateFinder
                 'code' => $code,
                 'date' => $date->format('Y-m-d'),
             ]);
-            throw new CbrRateNotFoundException();
+
+            throw new RateNotFoundException();
         }
 
         return array_shift($rates);

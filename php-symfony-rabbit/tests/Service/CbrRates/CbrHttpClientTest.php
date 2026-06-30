@@ -3,7 +3,7 @@
 namespace App\Tests\Service\CbrRates;
 
 use App\Config\CbrRates;
-use App\Exception\CbrRates\CbrProviderException;
+use App\Exception\CbrRates\UpstreamUnavailableException;
 use App\Service\CbrRates\CbrHttpClient;
 use DateTimeImmutable;
 use Exception;
@@ -52,7 +52,7 @@ class CbrHttpClientTest extends TestCase
         $this->assertSame($expectedXml, $result);
     }
 
-    public function testGetDailyXmlByDateThrowsCbrProviderExceptionOnHttpError(): void
+    public function testGetDailyXmlByDateThrowsUpstreamUnavailableExceptionOnHttpError(): void
     {
         $date = new DateTimeImmutable('2023-10-25');
 
@@ -63,7 +63,7 @@ class CbrHttpClientTest extends TestCase
         $this->logger->expects($this->once())
             ->method('error');
 
-        $this->expectException(CbrProviderException::class);
+        $this->expectException(UpstreamUnavailableException::class);
         $this->expectExceptionMessage('CBR upstream unavailable.');
 
         $this->client->getDailyXmlByDate($date);

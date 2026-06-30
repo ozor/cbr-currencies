@@ -46,3 +46,10 @@ services:
         autowire: true
         public: true
 
+
+when@test:
+    services:
+        App\Contract\CbrRatesCalculatorInterface:
+            class: App\Service\CbrRates\CbrRatesCalculator
+            autowire: true
+            public: true

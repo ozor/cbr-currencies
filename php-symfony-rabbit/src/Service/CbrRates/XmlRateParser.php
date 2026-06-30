@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Service\CbrRates;
 
 use App\Dto\CbrRates\CbrRatesDto;
-use App\Exception\CbrRates\CbrRatesParseException;
+use App\Exception\CbrRates\ParseRatesException;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -19,7 +19,7 @@ class XmlRateParser
     }
 
     /**
-     * @throws CbrRatesParseException
+     * @throws ParseRatesException
      */
     public function parse(string $xml): CbrRatesDto
     {
@@ -27,7 +27,7 @@ class XmlRateParser
             /** @var CbrRatesDto $rates */
             $rates = $this->serializer->deserialize($xml, CbrRatesDto::class, self::FORMAT_XML);
         } catch (ExceptionInterface $e) {
-            throw new CbrRatesParseException('Failed to parse CBR rates XML: ' . $e->getMessage(), 0, $e);
+            throw new ParseRatesException('Failed to parse CBR rates XML: ' . $e->getMessage(), 0, $e);
         }
 
         return $rates;

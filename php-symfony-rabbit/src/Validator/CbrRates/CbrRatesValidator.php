@@ -3,7 +3,7 @@
 namespace App\Validator\CbrRates;
 
 use App\Dto\CbrRates\CbrRateRequestDto;
-use App\Exception\RequestValidationException;
+use App\Exception\ValidationException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 readonly class CbrRatesValidator implements CbrRatesValidatorInterface
@@ -23,7 +23,7 @@ readonly class CbrRatesValidator implements CbrRatesValidatorInterface
                 $validationErrors[$violation->getPropertyPath()] = $violation->getMessage();
             }
 
-            throw new RequestValidationException($validationErrors);
+            throw new ValidationException($validationErrors);
         }
     }
 }

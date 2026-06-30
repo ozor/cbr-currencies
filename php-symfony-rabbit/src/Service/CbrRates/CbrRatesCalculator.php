@@ -9,7 +9,7 @@ use App\Domain\Calendar\PreviousTradingDayResolver;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
-use App\Exception\CbrRates\CbrRateNotFoundException;
+use App\Exception\CbrRates\RateNotFoundException;
 use DateMalformedStringException;
 use DateTimeImmutable;
 
@@ -60,12 +60,12 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
 
         $snapshot = $this->ratesProvider->getDailyByDate($date);
         if ($snapshot === null) {
-            throw new CbrRateNotFoundException();
+            throw new RateNotFoundException();
         }
 
         $snapshotPrev = $this->ratesProvider->getDailyByDate($datePrev);
         if ($snapshotPrev === null) {
-            throw new CbrRateNotFoundException();
+            throw new RateNotFoundException();
         }
 
         $rate = $this->rateFinder->find($snapshot, $code, $date);

@@ -3,14 +3,9 @@
 namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
-use App\Exception\CbrRates\CbrProviderException;
+use App\Exception\CbrRates\UpstreamUnavailableException;
 use DateTimeImmutable;
-use Exception;
 use Psr\Log\LoggerInterface;
-use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Throwable;
 
@@ -36,7 +31,7 @@ class CbrHttpClient
                     ],
                 ]
             )->getContent();
-        // TODO: Catching all possible exceptions from the HTTP client and rethrowing as a CbrProviderException
+        // Catching all possible exceptions from the HTTP client and rethrowing as UpstreamUnavailableException
         } catch (Throwable $exception) {
             $this->logger->error($exception->getMessage(), [
                 'exception' => $exception,
@@ -44,7 +39,7 @@ class CbrHttpClient
                 'date' => $date->format(CbrRates::RATE_CBR_DATE_FORMAT),
             ]);
 
-            throw new CbrProviderException('CBR upstream unavailable.', 0, $exception);
+            throw new UpstreamUnavailableException('CBR upstream unavailable.', 0, $exception);
         }
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Tests\Validator\CbrRates;
 
 use App\Dto\CbrRates\CbrRateRequestDto;
-use App\Exception\RequestValidationException;
+use App\Exception\ValidationException;
 use App\Validator\CbrRates\CbrRatesValidator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -58,7 +58,7 @@ class CbrRatesValidatorTest extends TestCase
             ->with($dto)
             ->willReturn($violations);
 
-        $this->expectException(RequestValidationException::class);
+        $this->expectException(ValidationException::class);
 
         $this->validator->validate($dto);
     }

@@ -9,7 +9,7 @@
 - HTTP entrypoint: `GET /api/v1/cbr/rates/{date}/{code}/{baseCode?}` in `src/Controller/CbrController.php`.
 - API flow: controller -> validator -> calculator -> **cached provider** -> supplier.
 - `CbrRatesCalculator` depends on `RatesProviderInterface` (bound to `CachedRatesProvider`), `RateFinder`, and `PreviousTradingDayResolver`.
-- `RateFinder` (`src/Service/CbrRates/RateFinder.php`) locates a `CbrRateDto` inside a `CbrRatesDto` snapshot; throws `CbrRateNotFoundException` when absent.
+- `RateFinder` (`src/Service/CbrRates/RateFinder.php`) locates a `CbrRateDto` inside a `CbrRatesDto` snapshot; throws `RateNotFoundException` when absent.
 - Fetching a daily snapshot is the responsibility of `RatesProviderInterface`; looking up a single rate inside a snapshot is the responsibility of `RateFinder`; finding the previous available trading date is the responsibility of `PreviousTradingDayResolver`.
 - `PreviousTradingDayResolver` (`src/Domain/Calendar/PreviousTradingDayResolver.php`) determines the previous available trading date by walking back up to `MAX_LOOKBACK_DAYS = 15` days and probing `RatesProviderInterface::getDailyByDate()`; throws `PreviousTradingDayNotFoundException` if no snapshot is found within the limit.
 - `CachedRatesProvider` (`src/Infrastructure/Cache/CachedRatesProvider.php`) is the single cache layer for daily snapshots (cache key: `CbrRatesDaily.{Y-m-d}`, TTL 86400, Redis via Symfony Cache); on cache `Throwable` it falls back to direct `CbrRatesSupplier` call.
@@ -21,9 +21,33 @@
 - Request date format is strict `Y-m-d` (`src/Config/CbrRates.php` + `CbrRateRequestDto` constraints).
 - Base currency default is `RUR`; supplier explicitly appends synthetic `RUR=1.0` rate (`CbrRatesSupplier`).
 - Currency precision is centralized (`CbrRates::CURRENCY_VALUE_PRECISION`) and applied in DTO/calculator.
-- API errors are normalized by `src/Exception/ExceptionHandler.php`:
-  - validation -> `400` with `errorMessage` + `errors` map;
-  - not found -> `404` with `errorMessage`.
+- API errors are normalized by `src/Exception/ExceptionHandler.php` using a unified JSON contract:
+  ```json
+  { "error": { "code": "rate_not_found", "message": "Rate not found.", "details": { "field": "msg" } } }
+  ```
+  `details` is only present for validation errors.
+- HTTP status policy (enforced via `instanceof` mapping, **not** `getCode()`):
+  - `ValidationException` → `400`
+  - `RateNotFoundException` / `PreviousTradingDayNotFoundException` → `404`
+  - `UpstreamUnavailableException` → `502`
+  - `ParseRatesException` → `502`
+  - any other `Throwable` → `500`
+- Machine-readable error codes are centralized in the `ErrorCode` enum (`src/Exception/ErrorCode.php`): `validation_error`, `rate_not_found`, `upstream_unavailable`, `parse_error`, `internal_error`.
+
+## Exception model
+Four semantic categories — each layer throws only its own category:
+
+| Category               | Class                                                             | Thrown by                          |
+|------------------------|-------------------------------------------------------------------|------------------------------------|
+| Validation             | `ValidationException` (`src/Exception/`)                          | `CbrRatesValidator`                |
+| Business not found     | `RateNotFoundException` (`src/Exception/CbrRates/`)               | `RateFinder`, `CbrRatesCalculator` |
+| Business not found     | `PreviousTradingDayNotFoundException` (`src/Exception/CbrRates/`) | `PreviousTradingDayResolver`       |
+| Upstream / integration | `UpstreamUnavailableException` (`src/Exception/CbrRates/`)        | `CbrHttpClient`                    |
+| Parse                  | `ParseRatesException` (`src/Exception/CbrRates/`)                 | `XmlRateParser`                    |
+
+- All domain exceptions implement `CbrRatesExceptionInterface`.
+- Old class names (`CbrProviderException`, `CbrRatesParseException`, `CbrRateNotFoundException`, `RequestValidationException`) are **no longer used**; the files remain as orphaned stubs.
+- `CachedRatesProvider` keeps its `catch (Throwable)` fallback intact (cache-resilience pattern); upstream/parse exceptions can still propagate from the retry path.
 
 ## Messaging and integration boundaries
 - RabbitMQ DSN comes from `MESSENGER_TRANSPORT_DSN` (`.env`); `async` and `failed` transports are declared in `config/packages/messenger.yaml`.
@@ -55,7 +79,5 @@
   - `WarmupRatesMessageHandler` (`src/Messenger/MessageHandler/WarmupRatesMessageHandler.php`): calls `RatesProviderInterface::getDailyByDate()` to prime the cache layer; rethrows exceptions to activate Messenger retry.
 - For async handlers, rethrow exceptions to activate Messenger retry (`WarmupRatesMessageHandler`).
 - Tests are mostly unit tests with mocks/stubs under `tests/**`; keep new tests isolated from external services. In `test` env, Messenger `async` transport is overridden to `in-memory://` (`config/packages/messenger.yaml`).
-- `CachedRatesProvider` is tested in `tests/Infrastructure/Cache/CachedRatesProviderTest.php`.
-- `PreviousTradingDayResolver` is tested in `tests/Domain/Calendar/PreviousTradingDayResolverTest.php`; scenarios: first attempt success, skip unavailable weekend days, find within limit, throw when limit exhausted (15 attempts).
-- `WarmupRatesMessageHandler` is tested in `tests/Messenger/MessageHandler/WarmupRatesMessageHandlerTest.php`.
-- `WarmupRatesCommand` is tested in `tests/Command/WarmupRatesCommandTest.php`; scenarios: dispatch per workday, skip weekends, correct message count, invalid date returns failure.
+- `ExceptionHandler` is unit-tested in `tests/Exception/ExceptionHandlerTest.php`; scenarios cover all five error categories, correct HTTP status, `error.code` value, presence/absence of `details`, and JSON content-type.
+- Controller error scenarios are functional-tested in `tests/Controller/CbrControllerFunctionalTest.php` via `WebTestCase`; the mock `CbrRatesCalculatorInterface` is injected via `static::getContainer()->set()` (service is declared `public: true` in `when@test:` block of `config/services.yaml`); no real HTTP requests to CBR are made.

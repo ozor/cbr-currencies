@@ -10,7 +10,7 @@ use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
 use App\Dto\CbrRates\CbrRatesDto;
-use App\Exception\CbrRates\CbrRateNotFoundException;
+use App\Exception\CbrRates\RateNotFoundException;
 use App\Exception\CbrRates\PreviousTradingDayNotFoundException;
 use App\Service\CbrRates\CbrRatesCalculator;
 use App\Service\CbrRates\RateFinder;
@@ -120,7 +120,7 @@ class CbrRatesDailyCalculatorTest extends TestCase
 
         $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder, $this->previousTradingDayResolver);
 
-        $this->expectException(CbrRateNotFoundException::class);
+        $this->expectException(RateNotFoundException::class);
 
         $calculator->calculate($requestDto);
     }

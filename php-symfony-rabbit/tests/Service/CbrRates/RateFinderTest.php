@@ -4,7 +4,7 @@ namespace App\Tests\Service\CbrRates;
 
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
-use App\Exception\CbrRates\CbrRateNotFoundException;
+use App\Exception\CbrRates\RateNotFoundException;
 use App\Service\CbrRates\RateFinder;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -43,21 +43,21 @@ class RateFinderTest extends TestCase
         $this->assertSame($eurRate, $result);
     }
 
-    public function testFindThrowsCbrRateNotFoundExceptionWhenCodeAbsent(): void
+    public function testFindThrowsRateNotFoundExceptionWhenCodeAbsent(): void
     {
         $usdRate = new CbrRateDto('USD', 1, 75.0, 75.0);
         $snapshot = new CbrRatesDto($this->date, [$usdRate]);
 
-        $this->expectException(CbrRateNotFoundException::class);
+        $this->expectException(RateNotFoundException::class);
 
         $this->rateFinder->find($snapshot, 'EUR', $this->date);
     }
 
-    public function testFindThrowsCbrRateNotFoundExceptionWhenSnapshotEmpty(): void
+    public function testFindThrowsRateNotFoundExceptionWhenSnapshotEmpty(): void
     {
         $snapshot = new CbrRatesDto($this->date, []);
 
-        $this->expectException(CbrRateNotFoundException::class);
+        $this->expectException(RateNotFoundException::class);
 
         $this->rateFinder->find($snapshot, 'USD', $this->date);
     }

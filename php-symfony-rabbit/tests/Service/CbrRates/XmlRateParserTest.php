@@ -6,7 +6,7 @@ namespace App\Tests\Service\CbrRates;
 
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
-use App\Exception\CbrRates\CbrRatesParseException;
+use App\Exception\CbrRates\ParseRatesException;
 use App\Service\CbrRates\XmlRateParser;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -82,9 +82,9 @@ class XmlRateParserTest extends TestCase
         $this->parser->parse($xml);
     }
 
-    public function testParseThrowsCbrRatesParseExceptionOnSerializerFailure(): void
+    public function testParseThrowsParseRatesExceptionOnSerializerFailure(): void
     {
-        $this->expectException(CbrRatesParseException::class);
+        $this->expectException(ParseRatesException::class);
 
         $this->serializer
             ->method('deserialize')
@@ -103,8 +103,8 @@ class XmlRateParserTest extends TestCase
 
         try {
             $this->parser->parse('<invalid/>');
-            $this->fail('CbrRatesParseException expected');
-        } catch (CbrRatesParseException $e) {
+            $this->fail('ParseRatesException expected');
+        } catch (ParseRatesException $e) {
             $this->assertSame($original, $e->getPrevious());
         }
     }
