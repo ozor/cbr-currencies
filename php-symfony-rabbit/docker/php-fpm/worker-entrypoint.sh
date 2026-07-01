@@ -3,19 +3,15 @@ set -e
 
 echo "Starting Messenger Worker..."
 
-# Ждем готовности основного приложения
-sleep 10
-
-# Инициализация транспортов
+# Инициализация транспортов (идемпотентная операция)
 php bin/console messenger:setup-transports
 
-# Запуск worker с автоматическим перезапуском
-while true; do
-  php bin/console messenger:consume async \
-    --time-limit=3600 \
-    --memory-limit=256M \
-    --limit=1000 \
-    -vv || true
+echo "Worker transports ready. Starting consumer..."
 
-  sleep 5
-done
+# Запуск consumer.
+# Docker restart policy (restart: always) обеспечивает перезапуск при выходе.
+exec php bin/console messenger:consume async \
+  --time-limit=3600 \
+  --memory-limit=256M \
+  --limit=1000 \
+  -vv

@@ -14,7 +14,7 @@
 - `PreviousTradingDayResolver` (`src/Domain/Calendar/PreviousTradingDayResolver.php`) determines the previous available trading date by walking back up to `MAX_LOOKBACK_DAYS = 15` days and probing `RatesProviderInterface::getDailyByDate()`; throws `PreviousTradingDayNotFoundException` if no snapshot is found within the limit.
 - `CachedRatesProvider` (`src/Infrastructure/Cache/CachedRatesProvider.php`) is the single cache layer for daily snapshots (cache key: `CbrRatesDaily.{Y-m-d}`, TTL 86400, Redis via Symfony Cache); on cache `Throwable` it falls back to direct `CbrRatesSupplier` call.
 - Cache miss calls CBR directly via `CbrHttpClient` + `XmlRateParser` inside `CbrRatesSupplier`.
-- Background warmup uses `CbrRatesCacheUpdateMessage` -> `async` transport -> RabbitMQ -> `CbrRatesCacheUpdateHandler`.
+- Background warmup uses `WarmupRatesMessage` -> `async` transport -> RabbitMQ -> `WarmupRatesMessageHandler`.
 - Single cache layer (Redis via Symfony Cache): snapshot key `CbrRatesDaily.{Y-m-d}` in `CachedRatesProvider`.
 
 ## Data and validation conventions
@@ -57,11 +57,16 @@ Four semantic categories — each layer throws only its own category:
 - Redis backend is `cache.adapter.redis` (`config/packages/cache.yaml`, `REDIS_DSN`).
 
 ## Developer workflows that matter
-- Start stack: `docker-compose up --build -d` from `php-symfony-rabbit/`.
-- App container auto-runs warmup for 180 days on startup (`docker/php-fpm/docker-entrypoint.sh`) via `app:cbr:warmup-rates --days=180`; warmup command skips weekends.
-- Worker container runs `messenger:setup-transports` and then auto-consumes `async` in loop with limits (`docker/php-fpm/worker-entrypoint.sh`).
-- Run tests: `docker-compose exec app vendor/bin/phpunit`.
-- Useful operational scripts: `scripts/check-messenger.sh`, `scripts/test-api.sh`, `scripts/test-cache.sh`, `scripts/test-complete.sh`.
+
+The project lifecycle is split into three explicit stages: **build → run → warmup**.
+
+- **Build**: `docker-compose build` from `php-symfony-rabbit/`. `composer install` runs inside the Docker build stage (Dockerfile) and is baked into the image. A Docker anonymous volume (`/var/www/html/vendor`) prevents the bind-mount from masking vendor at runtime.
+- **Run stack**: `docker-compose up -d` (or `make up`). App and worker containers wait for Redis/RabbitMQ healthchecks before starting (no sleep-based hacks).
+- **App entrypoint** (`docker/php-fpm/docker-entrypoint.sh`): runs `cache:clear` then starts `php-fpm`. No hidden business operations.
+- **Worker entrypoint** (`docker/php-fpm/worker-entrypoint.sh`): runs `messenger:setup-transports`, then `exec`s `messenger:consume async` with limits. Docker `restart: always` handles re-runs when the process exits naturally (e.g. after `--time-limit`). No bash loop, no `|| true`.
+- **Warmup** (explicit, separate step): `make warmup` or `docker-compose exec app php bin/console app:cbr:warmup-rates --days=180`. This dispatches messages to RabbitMQ; worker processes them asynchronously. Warmup is **not** triggered on app startup.
+- **Run tests**: `make test` or `docker-compose exec app vendor/bin/phpunit`.
+- **Makefile** (`php-symfony-rabbit/Makefile`) provides targets: `build`, `up`, `build-up`, `down`, `restart`, `warmup`, `warmup-days`, `test`, `logs-app`, `logs-worker`, `shell`, `ps`, `messenger-stats`, `failed-show`, `failed-retry`.
 
 ## Project-specific coding/test patterns
 - Use `readonly` DTO/service style and constructor promotion used across `src/Dto` and `src/Service`.

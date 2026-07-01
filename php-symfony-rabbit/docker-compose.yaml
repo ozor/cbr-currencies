@@ -15,14 +15,19 @@ services:
       dockerfile: Dockerfile
     volumes:
       - *volume_root_project
+      # vendor установлен в образе на этапе сборки; анонимный volume
+      # предотвращает перекрытие vendor bind-mount'ом хоста
+      - /var/www/html/vendor
 #      - ./docker/php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     networks:
       - docker
     environment:
       PHP_IDE_CONFIG: "serverName=app"
     depends_on:
-      - redis
-      - rabbitmq
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   worker:
     restart: always
@@ -31,14 +36,16 @@ services:
       dockerfile: Dockerfile
     volumes:
       - *volume_root_project
+      - /var/www/html/vendor
     networks:
       - docker
     entrypoint: ["worker-entrypoint.sh"]
     command: []
     depends_on:
-      - app
-      - redis
-      - rabbitmq
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   nginx:
     restart: always
@@ -63,6 +70,11 @@ services:
     networks:
       - docker
     command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   rabbitmq:
     restart: always
@@ -78,6 +90,12 @@ services:
       RABBITMQ_DEFAULT_PASS: $RABBITMQ_DEFAULT_PASS
     networks:
       - docker
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
   rabbitmq-data:
