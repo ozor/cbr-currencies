@@ -11,8 +11,8 @@ services:
   app:
     restart: always
     build:
-      context: ./docker/php-fpm
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/php-fpm/Dockerfile
     volumes:
       - *volume_root_project
       # vendor установлен в образе на этапе сборки; анонимный volume
@@ -32,8 +32,8 @@ services:
   worker:
     restart: always
     build:
-      context: ./docker/php-fpm
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/php-fpm/Dockerfile
     volumes:
       - *volume_root_project
       - /var/www/html/vendor

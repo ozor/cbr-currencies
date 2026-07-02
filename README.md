@@ -75,7 +75,7 @@ docker-compose --version
 ```bash
 # 1. Клонировать репозиторий
 git clone https://github.com/ozor/cbr-currencies.git
-cd cbr-currencies/php-symfony-rabbit
+cd cbr-currencies
 
 # 2. Собрать образы и поднять стек
 make build-up
@@ -237,7 +237,6 @@ make down
 ## Структура проекта
 
 ```
-php-symfony-rabbit/
 ├── Makefile                    # Операционные команды
 ├── docker-compose.yaml         # Оркестрация контейнеров
 ├── docker/

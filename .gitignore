@@ -1,17 +1,43 @@
-# Root .gitignore
-# Общие системные файлы
-.DS_Store
-Thumbs.db
+# Symfony standard ignores
+/var/
+/public/bundles/
+/config/secrets/prod/prod.decrypt.private.php
+/.env.local
+/.env.local.php
+/.env.*.local
+
+# Composer
+/vendor/
+/composer.phar
+
+# PHPUnit
+.phpunit.result.cache
 
 # IDEs
 /.idea/
 /.vscode/
 *.iml
 
+# Logs, cache, build
+/logs/
+coverage/
+build/
+
+# Node
+/node_modules/
+
 # Backups
 /BACKUP/
 
-# Misc
+# System / Misc
+.DS_Store
+Thumbs.db
 *.log
 *.cache
 *.tmp
+
+###> symfony/framework-bundle ###
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+###< phpunit/phpunit ###

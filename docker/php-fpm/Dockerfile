@@ -27,8 +27,8 @@ RUN composer install --optimize-autoloader --no-interaction
 COPY . .
 
 # Копируем entrypoint скрипты
-COPY docker-entrypoint.sh /usr/local/bin/
-COPY worker-entrypoint.sh /usr/local/bin/
+COPY docker/php-fpm/docker-entrypoint.sh /usr/local/bin/
+COPY docker/php-fpm/worker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/worker-entrypoint.sh
 
 EXPOSE 9000

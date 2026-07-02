@@ -1,7 +1,7 @@
 # AGENTS Guide (cbr-currencies)
 
 ## Scope and source of truth
-- Primary app is `php-symfony-rabbit/` (Symfony 8 + PHP 8.5).
+- Primary app is the repository root (Symfony 8 + PHP 8.5). Project files (`src/`, `config/`, `tests/`, `docker/`, etc.) are located directly in the repo root.
 - `BACKUP/` is an older snapshot; do not copy patterns from there unless explicitly asked.
 - When docs conflict, trust runtime config/code first: `config/packages/*.yaml`, `config/routes/*.yaml`, `src/**`.
 
@@ -60,13 +60,13 @@ Four semantic categories — each layer throws only its own category:
 
 The project lifecycle is split into three explicit stages: **build → run → warmup**.
 
-- **Build**: `docker-compose build` from `php-symfony-rabbit/`. `composer install` runs inside the Docker build stage (Dockerfile) and is baked into the image. A Docker anonymous volume (`/var/www/html/vendor`) prevents the bind-mount from masking vendor at runtime.
+- **Build**: `docker-compose build` from the repository root. `composer install` runs inside the Docker build stage (Dockerfile) and is baked into the image. A Docker anonymous volume (`/var/www/html/vendor`) prevents the bind-mount from masking vendor at runtime.
 - **Run stack**: `docker-compose up -d` (or `make up`). App and worker containers wait for Redis/RabbitMQ healthchecks before starting (no sleep-based hacks).
 - **App entrypoint** (`docker/php-fpm/docker-entrypoint.sh`): runs `cache:clear` then starts `php-fpm`. No hidden business operations.
 - **Worker entrypoint** (`docker/php-fpm/worker-entrypoint.sh`): runs `messenger:setup-transports`, then `exec`s `messenger:consume async` with limits. Docker `restart: always` handles re-runs when the process exits naturally (e.g. after `--time-limit`). No bash loop, no `|| true`.
 - **Warmup** (explicit, separate step): `make warmup` or `docker-compose exec app php bin/console app:cbr:warmup-rates --days=180`. This dispatches messages to RabbitMQ; worker processes them asynchronously. Warmup is **not** triggered on app startup.
 - **Run tests**: `make test` or `docker-compose exec app vendor/bin/phpunit`.
-- **Makefile** (`php-symfony-rabbit/Makefile`) provides targets: `build`, `up`, `build-up`, `down`, `restart`, `warmup`, `warmup-days`, `test`, `logs-app`, `logs-worker`, `shell`, `ps`, `messenger-stats`, `failed-show`, `failed-retry`.
+- **Makefile** (`Makefile` at repo root) provides targets: `build`, `up`, `build-up`, `down`, `restart`, `warmup`, `warmup-days`, `test`, `logs-app`, `logs-worker`, `shell`, `ps`, `messenger-stats`, `failed-show`, `failed-retry`.
 
 ## Project-specific coding/test patterns
 - Use `readonly` DTO/service style and constructor promotion used across `src/Dto` and `src/Service`.
