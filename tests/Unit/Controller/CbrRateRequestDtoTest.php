@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Tests\Controller;
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Controller;
 
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
@@ -8,7 +10,7 @@ use App\Dto\CbrRates\CbrRateResponsePropertyDto;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
-class CbrControllerTest extends TestCase
+class CbrRateRequestDtoTest extends TestCase
 {
     public function testRatesValidatesRequestAndCalculates(): void
     {
@@ -33,3 +35,4 @@ class CbrControllerTest extends TestCase
         $this->assertEquals('EUR', $responseDto->getBaseRate()->getCode());
     }
 }
+

@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Tests\Validator\CbrRates;
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Validator\CbrRates;
 
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Exception\ValidationException;
@@ -21,7 +23,7 @@ class CbrRatesValidatorTest extends TestCase
     protected function setUp(): void
     {
         $this->symfonyValidator = $this->createMock(ValidatorInterface::class);
-        $this->validator = new CbrRatesValidator($this->symfonyValidator);
+        $this->validator        = new CbrRatesValidator($this->symfonyValidator);
     }
 
     public function testValidatePassesWithNoViolations(): void
@@ -34,8 +36,6 @@ class CbrRatesValidatorTest extends TestCase
             ->willReturn(new ConstraintViolationList());
 
         $this->validator->validate($dto);
-
-        $this->assertTrue(true);
     }
 
     public function testValidateThrowsExceptionWithViolations(): void
@@ -63,3 +63,4 @@ class CbrRatesValidatorTest extends TestCase
         $this->validator->validate($dto);
     }
 }
+
