@@ -21,7 +21,7 @@ WORKDIR /var/www/html
 
 # Устанавливаем зависимости на этапе сборки образа (включая dev для PHPUnit)
 COPY composer.json composer.lock ./
-RUN composer install --optimize-autoloader --no-interaction
+RUN composer install --optimize-autoloader --no-interaction --no-scripts
 
 # Копируем весь проект поверх
 COPY . .
