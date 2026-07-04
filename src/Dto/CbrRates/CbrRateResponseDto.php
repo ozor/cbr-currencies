@@ -37,6 +37,9 @@ final readonly class CbrRateResponseDto
         return $this->crossRate;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

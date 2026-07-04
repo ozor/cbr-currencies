@@ -30,7 +30,6 @@ class CbrRatesDailyCalculatorTest extends TestCase
     /** @var MockObject&RatesProviderInterface */
     private RatesProviderInterface $ratesProvider;
 
-    /** @var MockObject&PreviousTradingDayResolver */
     private PreviousTradingDayResolver $previousTradingDayResolver;
 
     private RateFinder $rateFinder;
@@ -43,8 +42,9 @@ class CbrRatesDailyCalculatorTest extends TestCase
         $this->date     = new DateTimeImmutable('2023-10-25');
         $this->datePrev = new DateTimeImmutable('2023-10-24');
 
-        $this->ratesProvider              = $this->createMock(RatesProviderInterface::class);
-        $this->previousTradingDayResolver = $this->createMock(PreviousTradingDayResolver::class);
+        $this->ratesProvider = $this->createMock(RatesProviderInterface::class);
+        // Use a real resolver backed by the mocked rates provider so tests don't mock the readonly class.
+        $this->previousTradingDayResolver = new PreviousTradingDayResolver($this->ratesProvider);
         $this->rateFinder                 = new RateFinder($this->createMock(LoggerInterface::class));
     }
 
@@ -68,17 +68,11 @@ class CbrRatesDailyCalculatorTest extends TestCase
             new CbrRateDto('EUR', 1, 84.5, 84.5),
         ]);
 
-        $this->previousTradingDayResolver
-            ->expects($this->exactly(2))
-            ->method('resolve')
-            ->with($this->callback(fn (DateTimeImmutable $d) => $d->format('Y-m-d') === $date->format('Y-m-d')))
-            ->willReturn($datePrev);
-
+        // Set up rates provider behavior: current date -> current snapshot, previous date -> prev snapshot
         $this->ratesProvider
-            ->expects($this->exactly(4))
             ->method('getDailyByDate')
             ->willReturnCallback(
-                function (DateTimeImmutable $d) use ($date, $datePrev, $snapshotCurrent, $snapshotPrev): CbrRatesDto {
+                function (DateTimeImmutable $d) use ($date, $snapshotCurrent, $snapshotPrev): CbrRatesDto {
                     if ($d->format('Y-m-d') === $date->format('Y-m-d')) {
                         return $snapshotCurrent;
                     }
@@ -113,13 +107,23 @@ class CbrRatesDailyCalculatorTest extends TestCase
             'EUR'
         );
 
-        $this->previousTradingDayResolver
-            ->method('resolve')
-            ->willReturn($this->datePrev);
+        $datePrev = $this->datePrev;
 
+        // Make resolver find $datePrev by returning non-null for the previous date, but ensure
+        // the snapshot for the main date is null so the calculator throws RateNotFoundException.
         $this->ratesProvider
             ->method('getDailyByDate')
-            ->willReturn(null);
+            ->willReturnCallback(function (DateTimeImmutable $d) use ($date, $datePrev) {
+                if ($d->format('Y-m-d') === $date->format('Y-m-d')) {
+                    return null; // main date missing
+                }
+
+                if ($d->format('Y-m-d') === $datePrev->format('Y-m-d')) {
+                    return new CbrRatesDto($datePrev, []);
+                }
+
+                return null;
+            });
 
         $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder, $this->previousTradingDayResolver);
 
@@ -140,13 +144,10 @@ class CbrRatesDailyCalculatorTest extends TestCase
             'EUR'
         );
 
-        $this->previousTradingDayResolver
-            ->method('resolve')
-            ->willThrowException(new PreviousTradingDayNotFoundException());
-
+        // When ratesProvider returns null for all previous days, resolver will throw
         $this->ratesProvider
             ->method('getDailyByDate')
-            ->willReturn(new CbrRatesDto($date, []));
+            ->willReturn(null);
 
         $calculator = new CbrRatesCalculator($this->ratesProvider, $this->rateFinder, $this->previousTradingDayResolver);
 

@@ -36,7 +36,7 @@ class PreviousTradingDayResolverTest extends TestCase
         $tuesday = new DateTimeImmutable('2025-01-07'); // Tuesday
         $monday  = new DateTimeImmutable('2025-01-06'); // Monday
 
-        $snapshot = $this->createStub(CbrRatesDto::class);
+        $snapshot = new CbrRatesDto(new DateTimeImmutable('2025-01-06'), []);
 
         $this->ratesProvider
             ->expects($this->once())
@@ -61,7 +61,7 @@ class PreviousTradingDayResolverTest extends TestCase
         $saturday = new DateTimeImmutable('2025-01-04'); // Saturday — no snapshot
         $friday   = new DateTimeImmutable('2025-01-03'); // Friday   — snapshot present
 
-        $snapshot = $this->createStub(CbrRatesDto::class);
+        $snapshot = new CbrRatesDto(new DateTimeImmutable('2025-01-03'), []);
 
         $this->ratesProvider
             ->expects($this->exactly(3))
@@ -88,7 +88,7 @@ class PreviousTradingDayResolverTest extends TestCase
     public function testReturnsFirstFoundDateWithinLimit(): void
     {
         $date     = new DateTimeImmutable('2025-01-10');
-        $snapshot = $this->createStub(CbrRatesDto::class);
+        $snapshot = new CbrRatesDto(new DateTimeImmutable('2025-01-04'), []);
 
         // First 5 days null, 6th day has snapshot
         $this->ratesProvider

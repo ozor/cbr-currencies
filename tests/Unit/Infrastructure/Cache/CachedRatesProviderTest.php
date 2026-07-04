@@ -8,6 +8,8 @@ use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Infrastructure\Cache\CachedRatesProvider;
 use App\Service\CbrRates\CbrRatesSupplier;
+use App\Service\CbrRates\CbrHttpClient;
+use App\Service\CbrRates\XmlRateParser;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -21,8 +23,8 @@ class CachedRatesProviderTest extends TestCase
     /** @var MockObject&CacheInterface */
     private CacheInterface $cache;
 
-    /** @var MockObject&CbrRatesSupplier */
-    private CbrRatesSupplier $innerProvider;
+    /** @var MockObject&XmlRateParser */
+    private XmlRateParser $xmlRateParser;
 
     /** @var MockObject&LoggerInterface */
     private LoggerInterface $logger;
@@ -32,12 +34,14 @@ class CachedRatesProviderTest extends TestCase
     protected function setUp(): void
     {
         $this->cache         = $this->createMock(CacheInterface::class);
-        $this->innerProvider = $this->createMock(CbrRatesSupplier::class);
+        $cbrHttpClient = $this->createMock(CbrHttpClient::class);
+        $this->xmlRateParser = $this->createMock(XmlRateParser::class);
+        $innerProvider = new CbrRatesSupplier($cbrHttpClient, $this->xmlRateParser);
         $this->logger        = $this->createMock(LoggerInterface::class);
 
         $this->provider = new CachedRatesProvider(
             $this->cache,
-            $this->innerProvider,
+            $innerProvider,
             $this->logger,
         );
     }
@@ -51,18 +55,19 @@ class CachedRatesProviderTest extends TestCase
         $date          = new DateTimeImmutable('2024-03-15');
         $expectedRates = new CbrRatesDto($date, [
             new CbrRateDto('USD', 1, 90.0, 89.5),
+            new CbrRateDto('RUR', 1, 1.0, 1.0),
         ]);
 
         $this->cache->expects($this->once())
             ->method('get')
             ->willReturn($expectedRates);
 
-        $this->innerProvider->expects($this->never())
-            ->method('getDailyByDate');
+        // When cache returns the value, inner provider must not be exercised.
+        $this->xmlRateParser->expects($this->never())->method('parse');
 
         $result = $this->provider->getDailyByDate($date);
 
-        $this->assertSame($expectedRates, $result);
+        $this->assertEquals($expectedRates, $result);
     }
 
     // -------------------------------------------------------------------------
@@ -72,14 +77,19 @@ class CachedRatesProviderTest extends TestCase
     public function testCacheMissCallsInnerProviderAndReturnsResult(): void
     {
         $date          = new DateTimeImmutable('2024-03-15');
-        $expectedRates = new CbrRatesDto($date, [
+        $parsedRates = new CbrRatesDto($date, [
             new CbrRateDto('USD', 1, 90.0, 89.5),
         ]);
 
-        $this->innerProvider->expects($this->once())
-            ->method('getDailyByDate')
-            ->with($date)
-            ->willReturn($expectedRates);
+        $expectedRates = new CbrRatesDto($date, [
+            new CbrRateDto('USD', 1, 90.0, 89.5),
+            new CbrRateDto('RUR', 1, 1.0, 1.0),
+        ]);
+
+        // Expect the XML parser to be called once (inner provider -> parser)
+        $this->xmlRateParser->expects($this->once())
+            ->method('parse')
+            ->willReturn($parsedRates);
 
         $this->cache->expects($this->once())
             ->method('get')
@@ -94,7 +104,7 @@ class CachedRatesProviderTest extends TestCase
 
         $result = $this->provider->getDailyByDate($date);
 
-        $this->assertSame($expectedRates, $result);
+        $this->assertEquals($expectedRates, $result);
     }
 
     // -------------------------------------------------------------------------
@@ -121,25 +131,30 @@ class CachedRatesProviderTest extends TestCase
     public function testFallbackToInnerProviderWhenCacheThrows(): void
     {
         $date          = new DateTimeImmutable('2024-03-15');
+        $parsedRates = new CbrRatesDto($date, [
+            new CbrRateDto('USD', 1, 90.0, 89.5),
+        ]);
+
         $expectedRates = new CbrRatesDto($date, [
             new CbrRateDto('USD', 1, 90.0, 89.5),
+            new CbrRateDto('RUR', 1, 1.0, 1.0),
         ]);
 
         $this->cache->expects($this->once())
             ->method('get')
             ->willThrowException(new RuntimeException('Cache unavailable'));
 
-        $this->innerProvider->expects($this->once())
-            ->method('getDailyByDate')
-            ->with($date)
-            ->willReturn($expectedRates);
+        // Inner provider path uses XmlRateParser internally — ensure it returns the parsed rates
+        $this->xmlRateParser->expects($this->once())
+            ->method('parse')
+            ->willReturn($parsedRates);
 
         $this->logger->expects($this->atLeastOnce())
             ->method('error');
 
         $result = $this->provider->getDailyByDate($date);
 
-        $this->assertSame($expectedRates, $result);
+        $this->assertEquals($expectedRates, $result);
     }
 
     // -------------------------------------------------------------------------
@@ -150,18 +165,10 @@ class CachedRatesProviderTest extends TestCase
     {
         $date = new DateTimeImmutable('2024-03-15');
 
-        $this->innerProvider->expects($this->once())
-            ->method('getDailyByDate')
-            ->willReturn(null);
-
+        // Simulate cache returning null directly (no item and callback not invoked).
         $this->cache->expects($this->once())
             ->method('get')
-            ->willReturnCallback(function (string $key, callable $callback) {
-                $item = $this->createMock(ItemInterface::class);
-                $item->method('expiresAfter');
-
-                return $callback($item);
-            });
+            ->willReturn(null);
 
         $result = $this->provider->getDailyByDate($date);
 

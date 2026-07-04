@@ -7,6 +7,7 @@ namespace App\Service\CbrRates;
 use App\Config\CbrRates;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
+use App\Exception\CbrRates\ParseRatesException;
 use DateTimeImmutable;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
@@ -20,15 +21,22 @@ class CbrRatesDenormalizer implements DenormalizerInterface
     public const VALUE = 'Value';
     public const VUNIT_RATE = 'VunitRate';
 
-    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): CbrRatesDto
+    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): CbrRatesDto
     {
+        $tradingDate = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data[self::DATE]);
+
+        if ($tradingDate === false) {
+            throw new ParseRatesException(sprintf('Failed to parse trading date "%s" with format "%s"', $data[self::DATE], self::DATE_FORMAT));
+        }
+
         return new CbrRatesDto(
-            DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data[self::DATE]),
+            $tradingDate,
             $this->denormalizeRates($data[self::VALUTE])
         );
     }
 
     /**
+     * @param array<int|string, mixed> $rates
      * @return CbrRateDto[]
      */
     private function denormalizeRates(array $rates): array

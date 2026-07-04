@@ -61,7 +61,7 @@ class CbrControllerFunctionalTest extends WebTestCase
     ): void {
         $this->assertSame($expectedStatus, $client->getResponse()->getStatusCode());
 
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('error', $body, 'Response must have root key "error"');
         $this->assertSame($expectedCode, $body['error']['code']);
         $this->assertArrayHasKey('message', $body['error']);
@@ -90,7 +90,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
         $this->assertSame(200, $client->getResponse()->getStatusCode());
 
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
 
         // Top-level keys
         $this->assertArrayHasKey('date', $body);
@@ -133,7 +133,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
         $this->assertStringContainsString(
             'application/json',
-            $client->getResponse()->headers->get('Content-Type')
+            (string) $client->getResponse()->headers->get('Content-Type')
         );
     }
 
@@ -149,7 +149,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
         $this->assertErrorResponse($client, 400, ErrorCode::VALIDATION_ERROR->value);
 
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('details', $body['error'], 'Validation error must include details');
     }
 
@@ -161,7 +161,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
         $this->assertErrorResponse($client, 400, ErrorCode::VALIDATION_ERROR->value);
 
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('details', $body['error']);
     }
 
@@ -179,7 +179,7 @@ class CbrControllerFunctionalTest extends WebTestCase
         $client->request('GET', $this->url(self::VALID_DATE, self::VALID_CODE));
 
         $this->assertErrorResponse($client, 404, ErrorCode::RATE_NOT_FOUND->value);
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertArrayNotHasKey('details', $body['error']);
     }
 
@@ -193,7 +193,7 @@ class CbrControllerFunctionalTest extends WebTestCase
         $client->request('GET', $this->url(self::VALID_DATE, self::VALID_CODE));
 
         $this->assertErrorResponse($client, 404, ErrorCode::RATE_NOT_FOUND->value);
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertArrayNotHasKey('details', $body['error']);
     }
 
@@ -213,7 +213,7 @@ class CbrControllerFunctionalTest extends WebTestCase
         $client->request('GET', $this->url(self::VALID_DATE, self::VALID_CODE));
 
         $this->assertErrorResponse($client, 502, ErrorCode::UPSTREAM_UNAVAILABLE->value);
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertArrayNotHasKey('details', $body['error']);
     }
 
@@ -229,7 +229,7 @@ class CbrControllerFunctionalTest extends WebTestCase
         $client->request('GET', $this->url(self::VALID_DATE, self::VALID_CODE));
 
         $this->assertErrorResponse($client, 502, ErrorCode::PARSE_ERROR->value);
-        $body = json_decode($client->getResponse()->getContent(), true);
+        $body = json_decode((string) $client->getResponse()->getContent(), true);
         $this->assertArrayNotHasKey('details', $body['error']);
     }
 
@@ -244,7 +244,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
         $this->assertStringContainsString(
             'application/json',
-            $client->getResponse()->headers->get('Content-Type')
+            (string) $client->getResponse()->headers->get('Content-Type')
         );
     }
 }

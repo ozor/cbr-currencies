@@ -6,5 +6,5 @@ use App\Dto\CbrRates\CbrRateRequestDto;
 
 interface CbrRatesValidatorInterface
 {
-    public function validate(CbrRateRequestDto $dto);
+    public function validate(CbrRateRequestDto $dto): void;
 }

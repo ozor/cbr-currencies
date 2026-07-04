@@ -27,7 +27,7 @@ class WarmupRatesCommandTest extends TestCase
         BypassFinals::enable();
 
         $this->messageBus = $this->createMock(MessageBusInterface::class);
-        $this->envelope   = $this->createStub(Envelope::class);
+        $this->envelope   = new Envelope(new \stdClass());
 
         $command             = new WarmupRatesCommand($this->messageBus);
         $this->commandTester = new CommandTester($command);

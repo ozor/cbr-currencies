@@ -69,6 +69,7 @@ class CbrRatesSupplierTest extends TestCase
 
         $supplier = new CbrRatesSupplier($this->cbrHttpClient, $this->xmlRateParser);
         $result   = $supplier->getDailyByDate($this->date);
+        $this->assertInstanceOf(CbrRatesDto::class, $result);
 
         $codes = array_map(fn (CbrRateDto $r) => $r->code, $result->rates);
         $this->assertContains('RUR', $codes);

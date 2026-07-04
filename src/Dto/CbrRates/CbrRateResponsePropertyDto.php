@@ -36,6 +36,9 @@ final readonly class CbrRateResponsePropertyDto
         return round($this->diff, CbrRates::CURRENCY_VALUE_PRECISION);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

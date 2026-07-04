@@ -63,4 +63,3 @@ class CbrRatesValidatorTest extends TestCase
         $this->validator->validate($dto);
     }
 }
-

@@ -47,7 +47,6 @@ class XmlRateParserIntegrationTest extends TestCase
     {
         $result = $this->parser->parse($this->loadFixture('cbr_rates_sample.xml'));
 
-        $this->assertInstanceOf(CbrRatesDto::class, $result);
         $this->assertSame('2023-10-25', $result->tradingDate->format('Y-m-d'));
     }
 

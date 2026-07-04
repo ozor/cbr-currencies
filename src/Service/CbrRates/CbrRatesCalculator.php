@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
@@ -12,6 +14,7 @@ use App\Dto\CbrRates\CbrRateResponsePropertyDto;
 use App\Exception\CbrRates\RateNotFoundException;
 use DateMalformedStringException;
 use DateTimeImmutable;
+use UnexpectedValueException;
 
 readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
 {
@@ -27,10 +30,17 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
      */
     public function calculate(CbrRateRequestDto $requestDto): CbrRateResponseDto
     {
-        $date = DateTimeImmutable::createFromFormat(
+        $parsed = DateTimeImmutable::createFromFormat(
             CbrRates::RATE_REQUEST_DATE_FORMAT,
             $requestDto->date,
-        )->setTime(0, 0, 0);
+        );
+
+        // Date is already validated by CbrRatesValidator; false is unreachable in normal flow.
+        if ($parsed === false) {
+            throw new UnexpectedValueException(sprintf('Invalid date format: %s', $requestDto->date));
+        }
+
+        $date = $parsed->setTime(0, 0);
 
         $rate = $this->calculateRate($date, $requestDto->code);
         $baseRate = $this->calculateRate($date, $requestDto->baseCode);

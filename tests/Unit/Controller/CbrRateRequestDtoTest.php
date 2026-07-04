@@ -35,4 +35,3 @@ class CbrRateRequestDtoTest extends TestCase
         $this->assertEquals('EUR', $responseDto->getBaseRate()->getCode());
     }
 }
-
