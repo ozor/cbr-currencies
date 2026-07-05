@@ -5,19 +5,18 @@ declare(strict_types=1);
 namespace App\Dto\CbrRates;
 
 use App\Config\CbrRates;
-use DateTimeImmutable;
 
 final readonly class CbrRateResponseDto
 {
     public function __construct(
-        private DateTimeImmutable          $date,
+        private \DateTimeImmutable $date,
         private CbrRateResponsePropertyDto $rate,
         private CbrRateResponsePropertyDto $baseRate,
         private CbrRateResponsePropertyDto $crossRate,
     ) {
     }
 
-    public function getDate(): DateTimeImmutable
+    public function getDate(): \DateTimeImmutable
     {
         return $this->date;
     }

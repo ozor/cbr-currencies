@@ -27,9 +27,9 @@ class WarmupRatesCommandTest extends TestCase
         BypassFinals::enable();
 
         $this->messageBus = $this->createMock(MessageBusInterface::class);
-        $this->envelope   = new Envelope(new \stdClass());
+        $this->envelope = new Envelope(new \stdClass());
 
-        $command             = new WarmupRatesCommand($this->messageBus);
+        $command = new WarmupRatesCommand($this->messageBus);
         $this->commandTester = new CommandTester($command);
     }
 
@@ -56,7 +56,7 @@ class WarmupRatesCommandTest extends TestCase
 
         $this->commandTester->execute([
             'start-date' => '2024-01-10',
-            '--days'     => '5',
+            '--days' => '5',
         ]);
 
         $this->assertEquals(Command::SUCCESS, $this->commandTester->getStatusCode());
@@ -73,7 +73,7 @@ class WarmupRatesCommandTest extends TestCase
 
         $this->commandTester->execute([
             'start-date' => '2024-01-14',
-            '--days'     => '7',
+            '--days' => '7',
         ]);
 
         $output = $this->commandTester->getDisplay();
@@ -88,14 +88,14 @@ class WarmupRatesCommandTest extends TestCase
         $this->messageBus
             ->method('dispatch')
             ->willReturnCallback(function () use (&$dispatchCount) {
-                $dispatchCount++;
+                ++$dispatchCount;
 
                 return $this->envelope;
             });
 
         $this->commandTester->execute([
             'start-date' => '2024-01-14',
-            '--days'     => '7',
+            '--days' => '7',
         ]);
 
         $this->assertEquals(5, $dispatchCount);
@@ -108,7 +108,7 @@ class WarmupRatesCommandTest extends TestCase
 
         $this->commandTester->execute([
             'start-date' => '2024-06-30',
-            '--days'     => '1',
+            '--days' => '1',
         ]);
 
         $this->assertEquals(Command::SUCCESS, $this->commandTester->getStatusCode());

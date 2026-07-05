@@ -8,8 +8,6 @@ use App\Contract\RatesProviderInterface;
 use App\Domain\Calendar\PreviousTradingDayResolver;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\PreviousTradingDayNotFoundException;
-use DateMalformedStringException;
-use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -23,25 +21,25 @@ class PreviousTradingDayResolverTest extends TestCase
     protected function setUp(): void
     {
         $this->ratesProvider = $this->createMock(RatesProviderInterface::class);
-        $this->resolver      = new PreviousTradingDayResolver($this->ratesProvider);
+        $this->resolver = new PreviousTradingDayResolver($this->ratesProvider);
     }
 
     /**
      * Tuesday 2025-01-07 → Monday 2025-01-06 (snapshot available on first try).
      *
-     * @throws DateMalformedStringException
+     * @throws \DateMalformedStringException
      */
     public function testResolvesFirstAvailablePreviousDay(): void
     {
-        $tuesday = new DateTimeImmutable('2025-01-07'); // Tuesday
-        $monday  = new DateTimeImmutable('2025-01-06'); // Monday
+        $tuesday = new \DateTimeImmutable('2025-01-07'); // Tuesday
+        $monday = new \DateTimeImmutable('2025-01-06'); // Monday
 
-        $snapshot = new CbrRatesDto(new DateTimeImmutable('2025-01-06'), []);
+        $snapshot = new CbrRatesDto(new \DateTimeImmutable('2025-01-06'), []);
 
         $this->ratesProvider
             ->expects($this->once())
             ->method('getDailyByDate')
-            ->with($this->callback(fn (DateTimeImmutable $d) => $d->format('Y-m-d') === $monday->format('Y-m-d')))
+            ->with($this->callback(fn (\DateTimeImmutable $d) => $d->format('Y-m-d') === $monday->format('Y-m-d')))
             ->willReturn($snapshot);
 
         $result = $this->resolver->resolve($tuesday);
@@ -52,26 +50,26 @@ class PreviousTradingDayResolverTest extends TestCase
     /**
      * Monday 2025-01-06 → Sunday null, Saturday null → Friday 2025-01-03 (3rd attempt).
      *
-     * @throws DateMalformedStringException
+     * @throws \DateMalformedStringException
      */
     public function testSkipsUnavailableDatesAndFindsFriday(): void
     {
-        $monday   = new DateTimeImmutable('2025-01-06'); // Monday
-        $sunday   = new DateTimeImmutable('2025-01-05'); // Sunday   — no snapshot
-        $saturday = new DateTimeImmutable('2025-01-04'); // Saturday — no snapshot
-        $friday   = new DateTimeImmutable('2025-01-03'); // Friday   — snapshot present
+        $monday = new \DateTimeImmutable('2025-01-06'); // Monday
+        $sunday = new \DateTimeImmutable('2025-01-05'); // Sunday   — no snapshot
+        $saturday = new \DateTimeImmutable('2025-01-04'); // Saturday — no snapshot
+        $friday = new \DateTimeImmutable('2025-01-03'); // Friday   — snapshot present
 
-        $snapshot = new CbrRatesDto(new DateTimeImmutable('2025-01-03'), []);
+        $snapshot = new CbrRatesDto(new \DateTimeImmutable('2025-01-03'), []);
 
         $this->ratesProvider
             ->expects($this->exactly(3))
             ->method('getDailyByDate')
-            ->willReturnCallback(function (DateTimeImmutable $d) use ($sunday, $saturday, $friday, $snapshot): ?CbrRatesDto {
+            ->willReturnCallback(function (\DateTimeImmutable $d) use ($sunday, $saturday, $friday, $snapshot): ?CbrRatesDto {
                 return match ($d->format('Y-m-d')) {
-                    $sunday->format('Y-m-d')   => null,
+                    $sunday->format('Y-m-d') => null,
                     $saturday->format('Y-m-d') => null,
-                    $friday->format('Y-m-d')   => $snapshot,
-                    default                    => null,
+                    $friday->format('Y-m-d') => $snapshot,
+                    default => null,
                 };
             });
 
@@ -83,12 +81,12 @@ class PreviousTradingDayResolverTest extends TestCase
     /**
      * When multiple consecutive days have no snapshot but one is found before the limit.
      *
-     * @throws DateMalformedStringException
+     * @throws \DateMalformedStringException
      */
     public function testReturnsFirstFoundDateWithinLimit(): void
     {
-        $date     = new DateTimeImmutable('2025-01-10');
-        $snapshot = new CbrRatesDto(new DateTimeImmutable('2025-01-04'), []);
+        $date = new \DateTimeImmutable('2025-01-10');
+        $snapshot = new CbrRatesDto(new \DateTimeImmutable('2025-01-04'), []);
 
         // First 5 days null, 6th day has snapshot
         $this->ratesProvider
@@ -97,7 +95,7 @@ class PreviousTradingDayResolverTest extends TestCase
             ->willReturnOnConsecutiveCalls(null, null, null, null, null, $snapshot);
 
         $expected = $date->modify('-6 day')->format('Y-m-d');
-        $result   = $this->resolver->resolve($date);
+        $result = $this->resolver->resolve($date);
 
         $this->assertSame($expected, $result->format('Y-m-d'));
     }
@@ -105,11 +103,11 @@ class PreviousTradingDayResolverTest extends TestCase
     /**
      * All 15 attempts return null → PreviousTradingDayNotFoundException must be thrown.
      *
-     * @throws DateMalformedStringException
+     * @throws \DateMalformedStringException
      */
     public function testThrowsWhenNoSnapshotFoundWithinLimit(): void
     {
-        $date = new DateTimeImmutable('2025-01-10');
+        $date = new \DateTimeImmutable('2025-01-10');
 
         $this->ratesProvider
             ->expects($this->exactly(15))

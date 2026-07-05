@@ -7,7 +7,6 @@ namespace App\Tests\Unit\Controller;
 use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
-use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 
 class CbrRateRequestDtoTest extends TestCase
@@ -25,7 +24,7 @@ class CbrRateRequestDtoTest extends TestCase
         $this->assertEquals($baseCode, $requestDto->baseCode);
 
         $responseDto = new CbrRateResponseDto(
-            new DateTimeImmutable('2023-10-25'),
+            new \DateTimeImmutable('2023-10-25'),
             new CbrRateResponsePropertyDto('USD', 75.0, 74.5, 0.5),
             new CbrRateResponsePropertyDto('EUR', 85.0, 84.5, 0.5),
             new CbrRateResponsePropertyDto('USD/EUR', 0.8824, 0.8817, 0.0007)

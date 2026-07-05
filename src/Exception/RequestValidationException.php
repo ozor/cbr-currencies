@@ -18,5 +18,4 @@ class RequestValidationException extends BadRequestHttpException implements CbrR
     {
         return $this->errors;
     }
-
 }

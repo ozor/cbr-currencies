@@ -8,7 +8,6 @@ use App\Config\CbrRates;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\ParseRatesException;
-use DateTimeImmutable;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 class CbrRatesDenormalizer implements DenormalizerInterface
@@ -23,9 +22,9 @@ class CbrRatesDenormalizer implements DenormalizerInterface
 
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): CbrRatesDto
     {
-        $tradingDate = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data[self::DATE]);
+        $tradingDate = \DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data[self::DATE]);
 
-        if ($tradingDate === false) {
+        if (false === $tradingDate) {
             throw new ParseRatesException(sprintf('Failed to parse trading date "%s" with format "%s"', $data[self::DATE], self::DATE_FORMAT));
         }
 
@@ -37,6 +36,7 @@ class CbrRatesDenormalizer implements DenormalizerInterface
 
     /**
      * @param array<int|string, mixed> $rates
+     *
      * @return CbrRateDto[]
      */
     private function denormalizeRates(array $rates): array
@@ -44,9 +44,9 @@ class CbrRatesDenormalizer implements DenormalizerInterface
         return array_map(function ($rate) {
             return new CbrRateDto(
                 $rate[self::CODE],
-                (int)$rate[self::NOMINAL],
-                round((float)str_replace(',', '.', $rate[self::VALUE]), CbrRates::CURRENCY_VALUE_PRECISION),
-                round((float)str_replace(',', '.', $rate[self::VUNIT_RATE]), CbrRates::CURRENCY_VALUE_PRECISION),
+                (int) $rate[self::NOMINAL],
+                round((float) str_replace(',', '.', $rate[self::VALUE]), CbrRates::CURRENCY_VALUE_PRECISION),
+                round((float) str_replace(',', '.', $rate[self::VUNIT_RATE]), CbrRates::CURRENCY_VALUE_PRECISION),
             );
         }, $rates);
     }

@@ -12,9 +12,6 @@ use App\Dto\CbrRates\CbrRateRequestDto;
 use App\Dto\CbrRates\CbrRateResponseDto;
 use App\Dto\CbrRates\CbrRateResponsePropertyDto;
 use App\Exception\CbrRates\RateNotFoundException;
-use DateMalformedStringException;
-use DateTimeImmutable;
-use UnexpectedValueException;
 
 readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
 {
@@ -26,18 +23,18 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
     }
 
     /**
-     * @throws DateMalformedStringException
+     * @throws \DateMalformedStringException
      */
     public function calculate(CbrRateRequestDto $requestDto): CbrRateResponseDto
     {
-        $parsed = DateTimeImmutable::createFromFormat(
+        $parsed = \DateTimeImmutable::createFromFormat(
             CbrRates::RATE_REQUEST_DATE_FORMAT,
             $requestDto->date,
         );
 
         // Date is already validated by CbrRatesValidator; false is unreachable in normal flow.
-        if ($parsed === false) {
-            throw new UnexpectedValueException(sprintf('Invalid date format: %s', $requestDto->date));
+        if (false === $parsed) {
+            throw new \UnexpectedValueException(sprintf('Invalid date format: %s', $requestDto->date));
         }
 
         $date = $parsed->setTime(0, 0);
@@ -62,19 +59,19 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
     }
 
     /**
-     * @throws DateMalformedStringException
+     * @throws \DateMalformedStringException
      */
-    private function calculateRate(DateTimeImmutable $date, string $code): CbrRateResponsePropertyDto
+    private function calculateRate(\DateTimeImmutable $date, string $code): CbrRateResponsePropertyDto
     {
         $datePrev = $this->previousTradingDayResolver->resolve($date);
 
         $snapshot = $this->ratesProvider->getDailyByDate($date);
-        if ($snapshot === null) {
+        if (null === $snapshot) {
             throw new RateNotFoundException();
         }
 
         $snapshotPrev = $this->ratesProvider->getDailyByDate($datePrev);
-        if ($snapshotPrev === null) {
+        if (null === $snapshotPrev) {
             throw new RateNotFoundException();
         }
 

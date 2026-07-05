@@ -14,11 +14,9 @@ use App\Exception\ValidationException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Throwable;
 
 class ExceptionHandlerTest extends TestCase
 {
@@ -29,7 +27,7 @@ class ExceptionHandlerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->logger  = $this->createMock(LoggerInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
         $this->handler = new ExceptionHandler($this->logger);
     }
 
@@ -37,9 +35,9 @@ class ExceptionHandlerTest extends TestCase
     // Helpers
     // -------------------------------------------------------------------------
 
-    private function makeEvent(Throwable $exception): ExceptionEvent
+    private function makeEvent(\Throwable $exception): ExceptionEvent
     {
-        $kernel  = $this->createMock(HttpKernelInterface::class);
+        $kernel = $this->createMock(HttpKernelInterface::class);
         $request = Request::create('/api/v1/cbr/rates/2025-01-15/USD');
 
         return new ExceptionEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $exception);
@@ -63,7 +61,7 @@ class ExceptionHandlerTest extends TestCase
     public function testValidationExceptionReturns400(): void
     {
         $exception = new ValidationException(['date' => 'Wrong date format.']);
-        $event     = $this->makeEvent($exception);
+        $event = $this->makeEvent($exception);
 
         $this->logger->expects($this->never())->method('error');
 
@@ -81,9 +79,9 @@ class ExceptionHandlerTest extends TestCase
 
     public function testValidationExceptionDetailsContainFieldErrors(): void
     {
-        $errors    = ['code' => 'This value is not a valid currency.', 'date' => 'Wrong date format.'];
+        $errors = ['code' => 'This value is not a valid currency.', 'date' => 'Wrong date format.'];
         $exception = new ValidationException($errors);
-        $event     = $this->makeEvent($exception);
+        $event = $this->makeEvent($exception);
 
         $this->handler->handleApiException($event);
 
@@ -98,7 +96,7 @@ class ExceptionHandlerTest extends TestCase
     public function testRateNotFoundExceptionReturns404(): void
     {
         $exception = new RateNotFoundException();
-        $event     = $this->makeEvent($exception);
+        $event = $this->makeEvent($exception);
 
         $this->logger->expects($this->never())->method('error');
 
@@ -120,7 +118,7 @@ class ExceptionHandlerTest extends TestCase
     public function testPreviousTradingDayNotFoundReturns404WithRateNotFoundCode(): void
     {
         $exception = new PreviousTradingDayNotFoundException();
-        $event     = $this->makeEvent($exception);
+        $event = $this->makeEvent($exception);
 
         $this->handler->handleApiException($event);
 
@@ -139,7 +137,7 @@ class ExceptionHandlerTest extends TestCase
     public function testUpstreamUnavailableExceptionReturns502(): void
     {
         $exception = new UpstreamUnavailableException('CBR upstream unavailable.');
-        $event     = $this->makeEvent($exception);
+        $event = $this->makeEvent($exception);
 
         $this->logger->expects($this->once())->method('error');
 
@@ -161,7 +159,7 @@ class ExceptionHandlerTest extends TestCase
     public function testParseRatesExceptionReturns502(): void
     {
         $exception = new ParseRatesException('Failed to parse CBR rates XML.');
-        $event     = $this->makeEvent($exception);
+        $event = $this->makeEvent($exception);
 
         $this->logger->expects($this->once())->method('error');
 
@@ -182,8 +180,8 @@ class ExceptionHandlerTest extends TestCase
 
     public function testUnknownExceptionReturns500(): void
     {
-        $exception = new RuntimeException('Unexpected error');
-        $event     = $this->makeEvent($exception);
+        $exception = new \RuntimeException('Unexpected error');
+        $event = $this->makeEvent($exception);
 
         $this->logger->expects($this->once())->method('error');
 
@@ -209,7 +207,7 @@ class ExceptionHandlerTest extends TestCase
             new RateNotFoundException(),
             new UpstreamUnavailableException(),
             new ParseRatesException(),
-            new RuntimeException('oops'),
+            new \RuntimeException('oops'),
         ] as $exception) {
             $event = $this->makeEvent($exception);
             $this->handler->handleApiException($event);

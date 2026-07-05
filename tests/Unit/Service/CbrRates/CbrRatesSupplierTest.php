@@ -9,13 +9,12 @@ use App\Dto\CbrRates\CbrRatesDto;
 use App\Service\CbrRates\CbrHttpClient;
 use App\Service\CbrRates\CbrRatesSupplier;
 use App\Service\CbrRates\XmlRateParser;
-use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class CbrRatesSupplierTest extends TestCase
 {
-    private DateTimeImmutable $date;
+    private \DateTimeImmutable $date;
 
     /** @var MockObject&CbrHttpClient */
     private CbrHttpClient $cbrHttpClient;
@@ -28,15 +27,15 @@ class CbrRatesSupplierTest extends TestCase
 
     public function setUp(): void
     {
-        $this->date = new DateTimeImmutable('2023-10-25');
+        $this->date = new \DateTimeImmutable('2023-10-25');
 
-        $usd                    = new CbrRateDto('USD', 1, 73.1234, 73.1234);
-        $rur                    = new CbrRateDto('RUR', 1, 1.0, 1.0);
-        $this->parsedDto        = new CbrRatesDto($this->date, [$usd]);
+        $usd = new CbrRateDto('USD', 1, 73.1234, 73.1234);
+        $rur = new CbrRateDto('RUR', 1, 1.0, 1.0);
+        $this->parsedDto = new CbrRatesDto($this->date, [$usd]);
         $this->expectedFinalDto = new CbrRatesDto($this->date, [$usd, $rur]);
 
         $this->cbrHttpClient = $this->createMock(CbrHttpClient::class);
-        $this->xmlRateParser  = $this->createMock(XmlRateParser::class);
+        $this->xmlRateParser = $this->createMock(XmlRateParser::class);
     }
 
     public function testGetDailyByDate(): void
@@ -68,7 +67,7 @@ class CbrRatesSupplierTest extends TestCase
         $this->xmlRateParser->method('parse')->willReturn($this->parsedDto);
 
         $supplier = new CbrRatesSupplier($this->cbrHttpClient, $this->xmlRateParser);
-        $result   = $supplier->getDailyByDate($this->date);
+        $result = $supplier->getDailyByDate($this->date);
         $this->assertInstanceOf(CbrRatesDto::class, $result);
 
         $codes = array_map(fn (CbrRateDto $r) => $r->code, $result->rates);

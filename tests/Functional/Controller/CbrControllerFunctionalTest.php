@@ -12,7 +12,6 @@ use App\Exception\CbrRates\PreviousTradingDayNotFoundException;
 use App\Exception\CbrRates\RateNotFoundException;
 use App\Exception\CbrRates\UpstreamUnavailableException;
 use App\Exception\ErrorCode;
-use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -37,7 +36,7 @@ class CbrControllerFunctionalTest extends WebTestCase
     private const string VALID_DATE = '2025-01-15';
     private const string VALID_CODE = 'USD';
     private const string VALID_BASE = 'EUR';
-    private const string BASE_URL   = '/api/v1/cbr/rates';
+    private const string BASE_URL = '/api/v1/cbr/rates';
 
     // -------------------------------------------------------------------------
     // Helpers
@@ -56,8 +55,8 @@ class CbrControllerFunctionalTest extends WebTestCase
 
     private function assertErrorResponse(
         KernelBrowser $client,
-        int           $expectedStatus,
-        string        $expectedCode
+        int $expectedStatus,
+        string $expectedCode,
     ): void {
         $this->assertSame($expectedStatus, $client->getResponse()->getStatusCode());
 
@@ -73,11 +72,11 @@ class CbrControllerFunctionalTest extends WebTestCase
 
     public function testHappyPathReturns200WithCorrectJsonStructure(): void
     {
-        $client     = static::createClient();
+        $client = static::createClient();
         $calculator = $this->mockCalculator();
 
         $responseDto = new CbrRateResponseDto(
-            new DateTimeImmutable(self::VALID_DATE),
+            new \DateTimeImmutable(self::VALID_DATE),
             new CbrRateResponsePropertyDto('USD', 75.0, 74.5, 0.5),
             new CbrRateResponsePropertyDto('EUR', 85.0, 84.5, 0.5),
             new CbrRateResponsePropertyDto('USD/EUR', 0.8824, 0.8817, 0.0007)
@@ -116,11 +115,11 @@ class CbrControllerFunctionalTest extends WebTestCase
 
     public function testHappyPathResponseIsJson(): void
     {
-        $client     = static::createClient();
+        $client = static::createClient();
         $calculator = $this->mockCalculator();
 
         $responseDto = new CbrRateResponseDto(
-            new DateTimeImmutable(self::VALID_DATE),
+            new \DateTimeImmutable(self::VALID_DATE),
             new CbrRateResponsePropertyDto('USD', 75.0, 74.5, 0.5),
             new CbrRateResponsePropertyDto('EUR', 85.0, 84.5, 0.5),
             new CbrRateResponsePropertyDto('USD/EUR', 0.8824, 0.8817, 0.0007)
@@ -171,7 +170,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
     public function testRateNotFoundReturns404(): void
     {
-        $client     = static::createClient();
+        $client = static::createClient();
         $calculator = $this->mockCalculator();
         $calculator->method('calculate')->willThrowException(new RateNotFoundException());
         static::getContainer()->set(CbrRatesCalculatorInterface::class, $calculator);
@@ -185,7 +184,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
     public function testPreviousTradingDayNotFoundReturns404(): void
     {
-        $client     = static::createClient();
+        $client = static::createClient();
         $calculator = $this->mockCalculator();
         $calculator->method('calculate')->willThrowException(new PreviousTradingDayNotFoundException());
         static::getContainer()->set(CbrRatesCalculatorInterface::class, $calculator);
@@ -203,7 +202,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
     public function testUpstreamUnavailableReturns502(): void
     {
-        $client     = static::createClient();
+        $client = static::createClient();
         $calculator = $this->mockCalculator();
         $calculator->method('calculate')->willThrowException(
             new UpstreamUnavailableException('CBR upstream unavailable.')
@@ -219,7 +218,7 @@ class CbrControllerFunctionalTest extends WebTestCase
 
     public function testParseFailureReturns502(): void
     {
-        $client     = static::createClient();
+        $client = static::createClient();
         $calculator = $this->mockCalculator();
         $calculator->method('calculate')->willThrowException(
             new ParseRatesException('Failed to parse CBR rates XML.')

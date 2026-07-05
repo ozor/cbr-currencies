@@ -68,6 +68,15 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "stan": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "cs-check": "PHP_CS_FIXER_IGNORE_ENV=1 vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no",
+        "cs-fix": "PHP_CS_FIXER_IGNORE_ENV=1 vendor/bin/php-cs-fixer fix --using-cache=no",
+        "test": "vendor/bin/phpunit",
+        "check": [
+            "@cs-check",
+            "@stan",
+            "@test"
         ]
     },
     "conflict": {

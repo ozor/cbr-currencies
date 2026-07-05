@@ -7,14 +7,12 @@ namespace App\Tests\Unit\Infrastructure\Cache;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Infrastructure\Cache\CachedRatesProvider;
-use App\Service\CbrRates\CbrRatesSupplier;
 use App\Service\CbrRates\CbrHttpClient;
+use App\Service\CbrRates\CbrRatesSupplier;
 use App\Service\CbrRates\XmlRateParser;
-use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -33,11 +31,11 @@ class CachedRatesProviderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->cache         = $this->createMock(CacheInterface::class);
+        $this->cache = $this->createMock(CacheInterface::class);
         $cbrHttpClient = $this->createMock(CbrHttpClient::class);
         $this->xmlRateParser = $this->createMock(XmlRateParser::class);
         $innerProvider = new CbrRatesSupplier($cbrHttpClient, $this->xmlRateParser);
-        $this->logger        = $this->createMock(LoggerInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->provider = new CachedRatesProvider(
             $this->cache,
@@ -52,7 +50,7 @@ class CachedRatesProviderTest extends TestCase
 
     public function testCacheHitDoesNotCallInnerProvider(): void
     {
-        $date          = new DateTimeImmutable('2024-03-15');
+        $date = new \DateTimeImmutable('2024-03-15');
         $expectedRates = new CbrRatesDto($date, [
             new CbrRateDto('USD', 1, 90.0, 89.5),
             new CbrRateDto('RUR', 1, 1.0, 1.0),
@@ -76,7 +74,7 @@ class CachedRatesProviderTest extends TestCase
 
     public function testCacheMissCallsInnerProviderAndReturnsResult(): void
     {
-        $date          = new DateTimeImmutable('2024-03-15');
+        $date = new \DateTimeImmutable('2024-03-15');
         $parsedRates = new CbrRatesDto($date, [
             new CbrRateDto('USD', 1, 90.0, 89.5),
         ]);
@@ -113,7 +111,7 @@ class CachedRatesProviderTest extends TestCase
 
     public function testCacheKeyIncludesDate(): void
     {
-        $date          = new DateTimeImmutable('2024-03-15');
+        $date = new \DateTimeImmutable('2024-03-15');
         $expectedRates = new CbrRatesDto($date, []);
 
         $this->cache->expects($this->once())
@@ -130,7 +128,7 @@ class CachedRatesProviderTest extends TestCase
 
     public function testFallbackToInnerProviderWhenCacheThrows(): void
     {
-        $date          = new DateTimeImmutable('2024-03-15');
+        $date = new \DateTimeImmutable('2024-03-15');
         $parsedRates = new CbrRatesDto($date, [
             new CbrRateDto('USD', 1, 90.0, 89.5),
         ]);
@@ -142,7 +140,7 @@ class CachedRatesProviderTest extends TestCase
 
         $this->cache->expects($this->once())
             ->method('get')
-            ->willThrowException(new RuntimeException('Cache unavailable'));
+            ->willThrowException(new \RuntimeException('Cache unavailable'));
 
         // Inner provider path uses XmlRateParser internally — ensure it returns the parsed rates
         $this->xmlRateParser->expects($this->once())
@@ -163,7 +161,7 @@ class CachedRatesProviderTest extends TestCase
 
     public function testReturnsNullWhenInnerProviderReturnsNull(): void
     {
-        $date = new DateTimeImmutable('2024-03-15');
+        $date = new \DateTimeImmutable('2024-03-15');
 
         // Simulate cache returning null directly (no item and callback not invoked).
         $this->cache->expects($this->once())

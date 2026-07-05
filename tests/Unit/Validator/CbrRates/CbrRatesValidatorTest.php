@@ -23,7 +23,7 @@ class CbrRatesValidatorTest extends TestCase
     protected function setUp(): void
     {
         $this->symfonyValidator = $this->createMock(ValidatorInterface::class);
-        $this->validator        = new CbrRatesValidator($this->symfonyValidator);
+        $this->validator = new CbrRatesValidator($this->symfonyValidator);
     }
 
     public function testValidatePassesWithNoViolations(): void

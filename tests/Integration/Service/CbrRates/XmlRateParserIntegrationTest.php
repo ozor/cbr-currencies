@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration\Service\CbrRates;
 
-use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\ParseRatesException;
 use App\Service\CbrRates\CbrRatesDenormalizer;
 use App\Service\CbrRates\XmlRateParser;
@@ -33,7 +32,7 @@ class XmlRateParserIntegrationTest extends TestCase
 
     private function loadFixture(string $filename): string
     {
-        $path = __DIR__ . '/../../fixtures/' . $filename;
+        $path = __DIR__.'/../../fixtures/'.$filename;
         $this->assertFileExists($path, "Fixture file not found: $path");
 
         return (string) file_get_contents($path);
@@ -54,7 +53,7 @@ class XmlRateParserIntegrationTest extends TestCase
     {
         $result = $this->parser->parse($this->loadFixture('cbr_rates_sample.xml'));
 
-        $codes = array_map(fn($r) => $r->code, $result->rates);
+        $codes = array_map(fn ($r) => $r->code, $result->rates);
 
         $this->assertContains('USD', $codes);
         $this->assertContains('EUR', $codes);
@@ -65,8 +64,8 @@ class XmlRateParserIntegrationTest extends TestCase
     {
         $result = $this->parser->parse($this->loadFixture('cbr_rates_sample.xml'));
 
-        $usd = array_values(array_filter($result->rates, fn($r) => $r->code === 'USD'))[0];
-        $eur = array_values(array_filter($result->rates, fn($r) => $r->code === 'EUR'))[0];
+        $usd = array_values(array_filter($result->rates, fn ($r) => 'USD' === $r->code))[0];
+        $eur = array_values(array_filter($result->rates, fn ($r) => 'EUR' === $r->code))[0];
 
         $this->assertSame(93.1234, $usd->value);
         $this->assertSame(93.1234, $usd->vunitRate);
