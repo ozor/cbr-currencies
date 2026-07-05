@@ -27,7 +27,7 @@ class XmlRateParser
             /** @var CbrRatesDto $rates */
             $rates = $this->serializer->deserialize($xml, CbrRatesDto::class, self::FORMAT_XML);
         } catch (ExceptionInterface $e) {
-            throw new ParseRatesException('Failed to parse CBR rates XML: ' . $e->getMessage(), 0, $e);
+            throw new ParseRatesException('Failed to parse CBR rates XML: '.$e->getMessage(), 0, $e);
         }
 
         return $rates;

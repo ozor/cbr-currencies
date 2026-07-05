@@ -25,7 +25,7 @@ class XmlRateParserTest extends TestCase
     protected function setUp(): void
     {
         $this->serializer = $this->createMock(SerializerInterface::class);
-        $this->parser     = new XmlRateParser($this->serializer);
+        $this->parser = new XmlRateParser($this->serializer);
     }
 
     public function testParseWrapsSerializerExceptionInParseRatesException(): void

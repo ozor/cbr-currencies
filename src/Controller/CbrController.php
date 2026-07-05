@@ -19,31 +19,40 @@ class CbrController extends AbstractController
      *      path="/cbr/rates/{date}/{code}/{baseCode}",
      *      description="Get currency rate"
      * )
+     *
      * @OA\Parameter(
      *      name="date",
      *      description="Rate date",
      *      in="path",
      *      required=true,
+     *
      *      @OA\Schema(type="string")
      * ),
+     *
      * @OA\Parameter(
      *      name="code",
      *      description="Currency code",
      *      in="path",
      *      required=true,
+     *
      *      @OA\Schema(type="string")
      * ),
+     *
      * @OA\Parameter(
      *      name="baseCode",
      *      description="Base currency code",
      *      in="path",
      *      required=false,
+     *
      *      @OA\Schema(type="string")
      * ),
+     *
      * @OA\Response(
      *      response=200,
      *      description="OK",
+     *
      *      @OA\JsonContent(
+     *
      *          @OA\Property(property="date", type="string", example="20/10/2021"),
      *          @OA\Property(property="rate", type="object",
      *              @OA\Property(property="code", description="Rate currency code", type="string", example="USD"),
@@ -65,6 +74,7 @@ class CbrController extends AbstractController
      *          )
      *      )
      * ),
+     *
      * @OA\Response(
      *    response=400,
      *    description="Bad request",

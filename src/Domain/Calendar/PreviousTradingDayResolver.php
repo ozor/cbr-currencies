@@ -4,8 +4,6 @@ namespace App\Domain\Calendar;
 
 use App\Contract\RatesProviderInterface;
 use App\Exception\CbrRates\PreviousTradingDayNotFoundException;
-use DateMalformedStringException;
-use DateTimeImmutable;
 
 readonly class PreviousTradingDayResolver
 {
@@ -20,14 +18,14 @@ readonly class PreviousTradingDayResolver
      * Returns the most recent previous date for which a daily snapshot is available,
      * going back up to MAX_LOOKBACK_DAYS days from the given date.
      *
-     * @throws PreviousTradingDayNotFoundException|DateMalformedStringException
+     * @throws PreviousTradingDayNotFoundException|\DateMalformedStringException
      */
-    public function resolve(DateTimeImmutable $date): DateTimeImmutable
+    public function resolve(\DateTimeImmutable $date): \DateTimeImmutable
     {
-        for ($i = 1; $i <= self::MAX_LOOKBACK_DAYS; $i++) {
+        for ($i = 1; $i <= self::MAX_LOOKBACK_DAYS; ++$i) {
             $candidate = $date->modify(sprintf('-%d day', $i));
 
-            if ($this->ratesProvider->getDailyByDate($candidate) !== null) {
+            if (null !== $this->ratesProvider->getDailyByDate($candidate)) {
                 return $candidate;
             }
         }

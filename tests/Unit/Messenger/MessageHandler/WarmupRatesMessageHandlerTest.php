@@ -9,8 +9,6 @@ use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Messenger\Message\WarmupRatesMessage;
 use App\Messenger\MessageHandler\WarmupRatesMessageHandler;
-use DateTimeImmutable;
-use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -28,7 +26,7 @@ class WarmupRatesMessageHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->ratesProvider = $this->createMock(RatesProviderInterface::class);
-        $this->logger        = $this->createMock(LoggerInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->handler = new WarmupRatesMessageHandler(
             $this->ratesProvider,
@@ -37,11 +35,11 @@ class WarmupRatesMessageHandlerTest extends TestCase
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function testHandlerWarmsUpSnapshotViaRatesProvider(): void
     {
-        $date    = new DateTimeImmutable('2023-10-25');
+        $date = new \DateTimeImmutable('2023-10-25');
         $message = new WarmupRatesMessage($date);
 
         $rates = new CbrRatesDto($date, [
@@ -60,11 +58,11 @@ class WarmupRatesMessageHandlerTest extends TestCase
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function testHandlerUsesDateFromMessage(): void
     {
-        $date    = new DateTimeImmutable('2024-03-15');
+        $date = new \DateTimeImmutable('2024-03-15');
         $message = new WarmupRatesMessage($date);
 
         $this->ratesProvider->expects($this->once())
@@ -76,11 +74,11 @@ class WarmupRatesMessageHandlerTest extends TestCase
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function testHandlerLogsWarningWhenNoSnapshot(): void
     {
-        $date    = new DateTimeImmutable('2023-10-25');
+        $date = new \DateTimeImmutable('2023-10-25');
         $message = new WarmupRatesMessage($date);
 
         $this->ratesProvider->expects($this->once())
@@ -99,9 +97,9 @@ class WarmupRatesMessageHandlerTest extends TestCase
 
     public function testHandlerRethrowsExceptionForRetry(): void
     {
-        $date      = new DateTimeImmutable('2023-10-25');
-        $message   = new WarmupRatesMessage($date);
-        $exception = new Exception('CBR fetch failed');
+        $date = new \DateTimeImmutable('2023-10-25');
+        $message = new WarmupRatesMessage($date);
+        $exception = new \Exception('CBR fetch failed');
 
         $this->ratesProvider->expects($this->once())
             ->method('getDailyByDate')
@@ -114,7 +112,7 @@ class WarmupRatesMessageHandlerTest extends TestCase
         $this->logger->expects($this->once())
             ->method('error');
 
-        $this->expectException(Exception::class);
+        $this->expectException(\Exception::class);
 
         ($this->handler)($message);
     }

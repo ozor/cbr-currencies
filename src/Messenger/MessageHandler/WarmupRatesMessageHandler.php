@@ -4,7 +4,6 @@ namespace App\Messenger\MessageHandler;
 
 use App\Contract\RatesProviderInterface;
 use App\Messenger\Message\WarmupRatesMessage;
-use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -25,7 +24,7 @@ readonly class WarmupRatesMessageHandler
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function __invoke(WarmupRatesMessage $message): void
     {
@@ -47,7 +46,7 @@ readonly class WarmupRatesMessageHandler
                     'date' => $message->date->format('Y-m-d'),
                 ]);
             }
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             $this->logger->error('Failed to warm up rates snapshot', [
                 'date' => $message->date->format('Y-m-d'),
                 'exception' => $exception->getMessage(),

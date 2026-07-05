@@ -11,7 +11,6 @@ use App\Exception\CbrRates\UpstreamUnavailableException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
-use Throwable;
 
 readonly class ExceptionHandler
 {
@@ -29,12 +28,12 @@ readonly class ExceptionHandler
         if ($httpStatus >= 500) {
             $this->logger->error($exception->getMessage(), [
                 'exception' => $exception,
-                'method'    => __METHOD__,
+                'method' => __METHOD__,
             ]);
         }
 
         $error = [
-            'code'    => $errorCode->value,
+            'code' => $errorCode->value,
             'message' => $exception->getMessage(),
         ];
 
@@ -48,15 +47,15 @@ readonly class ExceptionHandler
     /**
      * @return array{int, ErrorCode}
      */
-    private function resolveStatusAndCode(Throwable $exception): array
+    private function resolveStatusAndCode(\Throwable $exception): array
     {
         return match (true) {
-            $exception instanceof ValidationException                 => [400, ErrorCode::VALIDATION_ERROR],
+            $exception instanceof ValidationException => [400, ErrorCode::VALIDATION_ERROR],
             $exception instanceof RateNotFoundException,
             $exception instanceof PreviousTradingDayNotFoundException => [404, ErrorCode::RATE_NOT_FOUND],
-            $exception instanceof UpstreamUnavailableException        => [502, ErrorCode::UPSTREAM_UNAVAILABLE],
-            $exception instanceof ParseRatesException                 => [502, ErrorCode::PARSE_ERROR],
-            default                                                   => [500, ErrorCode::INTERNAL_ERROR],
+            $exception instanceof UpstreamUnavailableException => [502, ErrorCode::UPSTREAM_UNAVAILABLE],
+            $exception instanceof ParseRatesException => [502, ErrorCode::PARSE_ERROR],
+            default => [500, ErrorCode::INTERNAL_ERROR],
         };
     }
 }

@@ -3,9 +3,6 @@
 namespace App\Command;
 
 use App\Messenger\Message\WarmupRatesMessage;
-use DateMalformedStringException;
-use DateTimeImmutable;
-use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -59,16 +56,17 @@ class WarmupRatesCommand extends Command
 
     /**
      * @throws ExceptionInterface
-     * @throws DateMalformedStringException
+     * @throws \DateMalformedStringException
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
         try {
-            $startDate = new DateTimeImmutable($input->getArgument('start-date'));
-        } catch (Exception $e) {
-            $io->error('Неверный формат даты: ' . $e->getMessage());
+            $startDate = new \DateTimeImmutable($input->getArgument('start-date'));
+        } catch (\Exception $e) {
+            $io->error('Неверный формат даты: '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
@@ -79,7 +77,7 @@ class WarmupRatesCommand extends Command
 
         $messagesSent = 0;
 
-        for ($i = 0; $i < $days; $i++) {
+        for ($i = 0; $i < $days; ++$i) {
             $date = $startDate->modify("-$i days");
 
             // Пропускаем выходные (суббота и воскресенье)
@@ -89,7 +87,7 @@ class WarmupRatesCommand extends Command
             }
 
             $this->messageBus->dispatch(new WarmupRatesMessage($date));
-            $messagesSent++;
+            ++$messagesSent;
 
             $io->writeln(sprintf('Задача отправлена для даты: %s', $date->format('Y-m-d')));
         }

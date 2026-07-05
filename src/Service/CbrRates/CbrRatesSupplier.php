@@ -8,7 +8,6 @@ use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\ParseRatesException;
-use DateTimeImmutable;
 
 readonly class CbrRatesSupplier implements CbrRatesSupplierInterface, RatesProviderInterface
 {
@@ -21,7 +20,7 @@ readonly class CbrRatesSupplier implements CbrRatesSupplierInterface, RatesProvi
     /**
      * @throws ParseRatesException
      */
-    public function getDailyByDate(DateTimeImmutable $date): ?CbrRatesDto
+    public function getDailyByDate(\DateTimeImmutable $date): ?CbrRatesDto
     {
         $xml = $this->cbrHttpClient->getDailyXmlByDate($date);
 

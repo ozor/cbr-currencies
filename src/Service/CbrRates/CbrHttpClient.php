@@ -4,10 +4,8 @@ namespace App\Service\CbrRates;
 
 use App\Config\CbrRates;
 use App\Exception\CbrRates\UpstreamUnavailableException;
-use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Throwable;
 
 class CbrHttpClient
 {
@@ -15,11 +13,11 @@ class CbrHttpClient
 
     public function __construct(
         private readonly HttpClientInterface $cbrRatesClient,
-        private readonly LoggerInterface     $logger,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
-    public function getDailyXmlByDate(DateTimeImmutable $date): string
+    public function getDailyXmlByDate(\DateTimeImmutable $date): string
     {
         try {
             return $this->cbrRatesClient->request(
@@ -31,8 +29,8 @@ class CbrHttpClient
                     ],
                 ]
             )->getContent();
-        // Catching all possible exceptions from the HTTP client and rethrowing as UpstreamUnavailableException
-        } catch (Throwable $exception) {
+            // Catching all possible exceptions from the HTTP client and rethrowing as UpstreamUnavailableException
+        } catch (\Throwable $exception) {
             $this->logger->error($exception->getMessage(), [
                 'exception' => $exception,
                 'method' => __METHOD__,

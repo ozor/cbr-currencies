@@ -7,8 +7,6 @@ namespace App\Tests\Unit\Service\CbrRates;
 use App\Config\CbrRates;
 use App\Exception\CbrRates\UpstreamUnavailableException;
 use App\Service\CbrRates\CbrHttpClient;
-use DateTimeImmutable;
-use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -28,15 +26,15 @@ class CbrHttpClientTest extends TestCase
     protected function setUp(): void
     {
         $this->httpClient = $this->createMock(HttpClientInterface::class);
-        $this->logger     = $this->createMock(LoggerInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->client = new CbrHttpClient($this->httpClient, $this->logger);
     }
 
     public function testGetDailyXmlByDateReturnsContent(): void
     {
-        $date            = new DateTimeImmutable('2023-10-25');
-        $expectedXml     = '<ValCurs Date="25.10.2023"></ValCurs>';
+        $date = new \DateTimeImmutable('2023-10-25');
+        $expectedXml = '<ValCurs Date="25.10.2023"></ValCurs>';
         $expectedDateReq = $date->format(CbrRates::RATE_CBR_DATE_FORMAT);
 
         $response = $this->createMock(ResponseInterface::class);
@@ -56,11 +54,11 @@ class CbrHttpClientTest extends TestCase
 
     public function testGetDailyXmlByDateThrowsUpstreamUnavailableExceptionOnHttpError(): void
     {
-        $date = new DateTimeImmutable('2023-10-25');
+        $date = new \DateTimeImmutable('2023-10-25');
 
         $this->httpClient->expects($this->once())
             ->method('request')
-            ->willThrowException(new Exception('Connection refused'));
+            ->willThrowException(new \Exception('Connection refused'));
 
         $this->logger->expects($this->once())
             ->method('error');

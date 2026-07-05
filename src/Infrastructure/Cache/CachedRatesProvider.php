@@ -6,11 +6,9 @@ use App\Config\CbrRates;
 use App\Contract\RatesProviderInterface;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Service\CbrRates\CbrRatesSupplier;
-use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
-use Throwable;
 
 readonly class CachedRatesProvider implements RatesProviderInterface
 {
@@ -21,7 +19,7 @@ readonly class CachedRatesProvider implements RatesProviderInterface
     ) {
     }
 
-    public function getDailyByDate(DateTimeImmutable $date): ?CbrRatesDto
+    public function getDailyByDate(\DateTimeImmutable $date): ?CbrRatesDto
     {
         $cacheKey = sprintf(
             'CbrRatesDaily.%s',
@@ -59,7 +57,7 @@ readonly class CachedRatesProvider implements RatesProviderInterface
                     return $result;
                 }
             );
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Cache error, falling back to direct provider call', [
                 'cache_key' => $cacheKey,
                 'error' => $e->getMessage(),
