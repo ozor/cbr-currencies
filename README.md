@@ -1,5 +1,7 @@
 # CBR Currency Rates API
 
+![CI](https://github.com/ozor/cbr-currencies/actions/workflows/ci.yml/badge.svg)
+
 Сервис для получения курсов валют и кросс-курсов с сайта Центрального Банка России (cbr.ru).
 
 ## Задача
@@ -181,6 +183,23 @@ make logs-worker
 make test
 # или
 docker-compose exec app vendor/bin/phpunit
+```
+
+---
+
+## Качество кода
+
+Набор команд для локальной проверки стиля, статического анализа и тестов (в контейнере):
+
+```bash
+# Все проверки разом (стиль + статанализ + тесты)
+docker-compose exec app composer check
+
+# По отдельности
+docker-compose exec app composer cs-check   # проверка code style
+docker-compose exec app composer cs-fix     # автоисправление стиля
+docker-compose exec app composer stan       # PHPStan, level 8
+docker-compose exec app composer test       # PHPUnit
 ```
 
 ---
