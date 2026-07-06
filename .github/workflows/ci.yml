@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  cs:
+    name: Code style (php-cs-fixer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: intl, bcmath, amqp
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+      - name: Run php-cs-fixer (check)
+        env:
+          # php-cs-fixer might not yet declare PHP 8.5 in its platform check; ignore env to force run
+          PHP_CS_FIXER_IGNORE_ENV: 1
+        run: composer cs-check
+
+  phpstan:
+    name: Static analysis (PHPStan level 8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: intl, bcmath, amqp
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+      - name: Warm up container cache
+        run: |
+          APP_ENV=dev php bin/console cache:warmup --env=dev
+      - name: Run PHPStan
+        run: composer stan
+
+  tests:
+    name: Tests (PHPUnit)
+    runs-on: ubuntu-latest
+    services: {}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: intl, bcmath, amqp
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+      - name: Run tests
+        env:
+          APP_ENV: test
+        run: composer test
