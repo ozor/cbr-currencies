@@ -1,4 +1,4 @@
-.PHONY: build up down restart warmup test logs-app logs-worker shell ps
+.PHONY: build up down restart warmup test logs-app logs-worker shell ps stan cs-check cs-fix
 
 # ──────────────────────────────────────────────
 #  Build & Lifecycle
@@ -45,6 +45,18 @@ warmup-days:
 ## Запуск PHPUnit тестов
 test:
 	docker-compose exec app vendor/bin/phpunit
+
+## Run PHPStan (level 8) inside app container
+stan:
+	docker-compose exec app composer stan
+
+## Run PHP CS Fixer (dry-run check) inside app container
+cs-check:
+	docker-compose exec app composer cs-check
+
+## Run PHP CS Fixer and apply fixes inside app container
+cs-fix:
+	docker-compose exec app composer cs-fix
 
 # ──────────────────────────────────────────────
 #  Операционные команды
