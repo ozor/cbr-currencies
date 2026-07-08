@@ -58,6 +58,9 @@ cs-check:
 cs-fix:
 	docker-compose exec app composer cs-fix
 
+full-check:
+	make stan cs-check test
+
 # ──────────────────────────────────────────────
 #  Операционные команды
 # ──────────────────────────────────────────────
