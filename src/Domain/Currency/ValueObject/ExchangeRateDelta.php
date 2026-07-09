@@ -45,7 +45,7 @@ final readonly class ExchangeRateDelta
     {
         return (string) $this->value->toScale(
             RateScale::DISPLAY,
-            RoundingMode::HALF_UP,
+            RoundingMode::HalfUp,
         );
     }
 
@@ -56,7 +56,7 @@ final readonly class ExchangeRateDelta
     {
         return (string) $this->value->toScale(
             RateScale::INTERNAL,
-            RoundingMode::HALF_UP,
+            RoundingMode::HalfUp,
         );
     }
 

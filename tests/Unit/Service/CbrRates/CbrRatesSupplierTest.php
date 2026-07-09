@@ -29,8 +29,8 @@ class CbrRatesSupplierTest extends TestCase
     {
         $this->date = new \DateTimeImmutable('2023-10-25');
 
-        $usd = new CbrRateDto('USD', 1, 73.1234, 73.1234);
-        $rur = new CbrRateDto('RUR', 1, 1.0, 1.0);
+        $usd = new CbrRateDto('USD', 1, '73.1234', '73.1234');
+        $rur = new CbrRateDto('RUR', 1, '1.0000', '1.0000');
         $this->parsedDto = new CbrRatesDto($this->date, [$usd]);
         $this->expectedFinalDto = new CbrRatesDto($this->date, [$usd, $rur]);
 

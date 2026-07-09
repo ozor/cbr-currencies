@@ -57,13 +57,13 @@ class CbrRatesDailyCalculatorTest extends TestCase
         $requestDto = new CbrRateRequestDto($date->format(CbrRates::RATE_REQUEST_DATE_FORMAT), 'USD', 'EUR');
 
         $snapshotCurrent = new CbrRatesDto($date, [
-            new CbrRateDto('USD', 1, 75.0, 75.0),
-            new CbrRateDto('EUR', 1, 85.0, 85.0),
+            new CbrRateDto('USD', 1, '75.0000', '75.0000'),
+            new CbrRateDto('EUR', 1, '85.0000', '85.0000'),
         ]);
 
         $snapshotPrev = new CbrRatesDto($datePrev, [
-            new CbrRateDto('USD', 1, 74.5, 74.5),
-            new CbrRateDto('EUR', 1, 84.5, 84.5),
+            new CbrRateDto('USD', 1, '74.5000', '74.5000'),
+            new CbrRateDto('EUR', 1, '84.5000', '84.5000'),
         ]);
 
         // Set up rates provider behavior: current date -> current snapshot, previous date -> prev snapshot

@@ -60,16 +60,16 @@ class XmlRateParserIntegrationTest extends TestCase
         $this->assertCount(2, $result->rates);
     }
 
-    public function testParsesCommaSeparatedValuesAsFloat(): void
+    public function testParsesCommaSeparatedValuesAsDecimalStrings(): void
     {
         $result = $this->parser->parse($this->loadFixture('cbr_rates_sample.xml'));
 
         $usd = array_values(array_filter($result->rates, fn ($r) => 'USD' === $r->code))[0];
         $eur = array_values(array_filter($result->rates, fn ($r) => 'EUR' === $r->code))[0];
 
-        $this->assertSame(93.1234, $usd->value);
-        $this->assertSame(93.1234, $usd->vunitRate);
-        $this->assertSame(98.4567, $eur->value);
+        $this->assertSame('93.1234', $usd->value);
+        $this->assertSame('93.1234', $usd->vunitRate);
+        $this->assertSame('98.4567', $eur->value);
     }
 
     public function testParsesNominalAsInteger(): void

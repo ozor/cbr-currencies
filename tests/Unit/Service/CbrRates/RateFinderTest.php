@@ -24,8 +24,8 @@ class RateFinderTest extends TestCase
 
     public function testFindReturnsMatchingRate(): void
     {
-        $usdRate = new CbrRateDto('USD', 1, 75.0, 75.0);
-        $eurRate = new CbrRateDto('EUR', 1, 85.0, 85.0);
+        $usdRate = new CbrRateDto('USD', 1, '75.0000', '75.0000');
+        $eurRate = new CbrRateDto('EUR', 1, '85.0000', '85.0000');
         $snapshot = new CbrRatesDto($this->date, [$usdRate, $eurRate]);
 
         $result = $this->rateFinder->find($snapshot, 'USD', $this->date);
@@ -35,8 +35,8 @@ class RateFinderTest extends TestCase
 
     public function testFindReturnsSecondRate(): void
     {
-        $usdRate = new CbrRateDto('USD', 1, 75.0, 75.0);
-        $eurRate = new CbrRateDto('EUR', 1, 85.0, 85.0);
+        $usdRate = new CbrRateDto('USD', 1, '75.0000', '75.0000');
+        $eurRate = new CbrRateDto('EUR', 1, '85.0000', '85.0000');
         $snapshot = new CbrRatesDto($this->date, [$usdRate, $eurRate]);
 
         $result = $this->rateFinder->find($snapshot, 'EUR', $this->date);
@@ -46,7 +46,7 @@ class RateFinderTest extends TestCase
 
     public function testFindThrowsRateNotFoundExceptionWhenCodeAbsent(): void
     {
-        $usdRate = new CbrRateDto('USD', 1, 75.0, 75.0);
+        $usdRate = new CbrRateDto('USD', 1, '75.0000', '75.0000');
         $snapshot = new CbrRatesDto($this->date, [$usdRate]);
 
         $this->expectException(RateNotFoundException::class);

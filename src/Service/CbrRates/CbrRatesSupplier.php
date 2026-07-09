@@ -29,8 +29,8 @@ readonly class CbrRatesSupplier implements CbrRatesSupplierInterface, RatesProvi
         $rurRate = new CbrRateDto(
             code: CbrRates::BASE_CURRENCY_CODE_DEFAULT,
             nominal: 1,
-            value: 1.0,
-            vunitRate: 1.0,
+            value: '1.0000',
+            vunitRate: '1.0000',
         );
 
         return new CbrRatesDto(

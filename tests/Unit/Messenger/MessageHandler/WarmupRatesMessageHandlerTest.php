@@ -43,7 +43,7 @@ class WarmupRatesMessageHandlerTest extends TestCase
         $message = new WarmupRatesMessage($date);
 
         $rates = new CbrRatesDto($date, [
-            new CbrRateDto('USD', 1, 75.0, 75.0),
+            new CbrRateDto('USD', 1, '75.0000', '75.0000'),
         ]);
 
         $this->ratesProvider->expects($this->once())

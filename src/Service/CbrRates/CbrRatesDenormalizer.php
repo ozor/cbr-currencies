@@ -45,10 +45,18 @@ class CbrRatesDenormalizer implements DenormalizerInterface
             return new CbrRateDto(
                 $rate[self::CODE],
                 (int) $rate[self::NOMINAL],
-                round((float) str_replace(',', '.', $rate[self::VALUE]), CbrRates::CURRENCY_VALUE_PRECISION),
-                round((float) str_replace(',', '.', $rate[self::VUNIT_RATE]), CbrRates::CURRENCY_VALUE_PRECISION),
+                $this->normalizeDecimalString($rate[self::VALUE]),
+                $this->normalizeDecimalString($rate[self::VUNIT_RATE]),
             );
         }, $rates);
+    }
+
+    /**
+     * Converts CBR decimal format into normalized dot-decimal string format.
+     */
+    private function normalizeDecimalString(string $value): string
+    {
+        return str_replace(',', '.', trim($value));
     }
 
     public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool

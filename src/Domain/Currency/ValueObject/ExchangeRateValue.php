@@ -62,7 +62,7 @@ final readonly class ExchangeRateValue
             $this->value->dividedBy(
                 $other->value,
                 RateScale::INTERNAL,
-                RoundingMode::HALF_UP,
+                RoundingMode::HalfUp,
             ),
         );
     }
@@ -84,7 +84,7 @@ final readonly class ExchangeRateValue
     {
         return (string) $this->value->toScale(
             RateScale::DISPLAY,
-            RoundingMode::HALF_UP,
+            RoundingMode::HalfUp,
         );
     }
 
@@ -95,7 +95,7 @@ final readonly class ExchangeRateValue
     {
         return (string) $this->value->toScale(
             RateScale::INTERNAL,
-            RoundingMode::HALF_UP,
+            RoundingMode::HalfUp,
         );
     }
 

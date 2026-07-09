@@ -80,9 +80,9 @@ readonly class CbrRatesCalculator implements CbrRatesCalculatorInterface
 
         return new CbrRateResponsePropertyDto(
             code: $rate->code,
-            value: round($rate->value, CbrRates::CURRENCY_VALUE_PRECISION),
-            valuePrev: round($ratePrev->value, CbrRates::CURRENCY_VALUE_PRECISION),
-            diff: round($rate->value - $ratePrev->value, CbrRates::CURRENCY_VALUE_PRECISION),
+            value: round((float) $rate->value, CbrRates::CURRENCY_VALUE_PRECISION),
+            valuePrev: round((float) $ratePrev->value, CbrRates::CURRENCY_VALUE_PRECISION),
+            diff: round((float) $rate->value - (float) $ratePrev->value, CbrRates::CURRENCY_VALUE_PRECISION),
         );
     }
 }

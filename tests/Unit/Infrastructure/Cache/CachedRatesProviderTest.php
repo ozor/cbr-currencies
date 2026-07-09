@@ -52,8 +52,8 @@ class CachedRatesProviderTest extends TestCase
     {
         $date = new \DateTimeImmutable('2024-03-15');
         $expectedRates = new CbrRatesDto($date, [
-            new CbrRateDto('USD', 1, 90.0, 89.5),
-            new CbrRateDto('RUR', 1, 1.0, 1.0),
+            new CbrRateDto('USD', 1, '90.0000', '89.5000'),
+            new CbrRateDto('RUR', 1, '1.0000', '1.0000'),
         ]);
 
         $this->cache->expects($this->once())
@@ -76,12 +76,12 @@ class CachedRatesProviderTest extends TestCase
     {
         $date = new \DateTimeImmutable('2024-03-15');
         $parsedRates = new CbrRatesDto($date, [
-            new CbrRateDto('USD', 1, 90.0, 89.5),
+            new CbrRateDto('USD', 1, '90.0000', '89.5000'),
         ]);
 
         $expectedRates = new CbrRatesDto($date, [
-            new CbrRateDto('USD', 1, 90.0, 89.5),
-            new CbrRateDto('RUR', 1, 1.0, 1.0),
+            new CbrRateDto('USD', 1, '90.0000', '89.5000'),
+            new CbrRateDto('RUR', 1, '1.0000', '1.0000'),
         ]);
 
         // Expect the XML parser to be called once (inner provider -> parser)
@@ -130,12 +130,12 @@ class CachedRatesProviderTest extends TestCase
     {
         $date = new \DateTimeImmutable('2024-03-15');
         $parsedRates = new CbrRatesDto($date, [
-            new CbrRateDto('USD', 1, 90.0, 89.5),
+            new CbrRateDto('USD', 1, '90.0000', '89.5000'),
         ]);
 
         $expectedRates = new CbrRatesDto($date, [
-            new CbrRateDto('USD', 1, 90.0, 89.5),
-            new CbrRateDto('RUR', 1, 1.0, 1.0),
+            new CbrRateDto('USD', 1, '90.0000', '89.5000'),
+            new CbrRateDto('RUR', 1, '1.0000', '1.0000'),
         ]);
 
         $this->cache->expects($this->once())
