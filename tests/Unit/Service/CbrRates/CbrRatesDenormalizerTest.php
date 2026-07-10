@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service\CbrRates;
 
-use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Service\CbrRates\CbrRatesDenormalizer;
 use PHPUnit\Framework\TestCase;

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Service\CbrRates;
 
-use App\Config\CbrRates;
 use App\Dto\CbrRates\CbrRateDto;
 use App\Dto\CbrRates\CbrRatesDto;
 use App\Exception\CbrRates\ParseRatesException;
