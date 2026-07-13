@@ -15,9 +15,7 @@ services:
       dockerfile: docker/php-fpm/Dockerfile
     volumes:
       - *volume_root_project
-      # vendor установлен в образе на этапе сборки; анонимный volume
-      # предотвращает перекрытие vendor bind-mount'ом хоста
-      - /var/www/html/vendor
+      - ./vendor:/var/www/html/vendor
 #      - ./docker/php-fpm/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     networks:
       - docker
@@ -36,7 +34,7 @@ services:
       dockerfile: docker/php-fpm/Dockerfile
     volumes:
       - *volume_root_project
-      - /var/www/html/vendor
+      - ./vendor:/var/www/html/vendor
     networks:
       - docker
     entrypoint: ["worker-entrypoint.sh"]

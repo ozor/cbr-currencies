@@ -1,4 +1,4 @@
-.PHONY: build up down restart warmup test logs-app logs-worker shell ps stan cs-check cs-fix
+.PHONY: build up down restart warmup test logs-app logs-worker shell ps stan cs-check cs-fix composer-install
 
 # ──────────────────────────────────────────────
 #  Build & Lifecycle
@@ -23,6 +23,10 @@ down:
 ## Перезапуск всего стека
 restart:
 	docker-compose restart
+
+## Установка зависимостей Composer внутри контейнера
+composer-install:
+	docker-compose exec app composer install
 
 # ──────────────────────────────────────────────
 #  Warmup исторических данных (явная операция)
